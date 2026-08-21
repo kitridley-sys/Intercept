@@ -42,3 +42,11 @@ The simulator now has two purpose-built views that share live state between brow
 Open the app normally and use **OPEN CONTROL TAB** / **OPEN RADAR TAB**. Put the two browser windows on separate monitors. The Control view owns the simulation clock; the Radar view is a passive shared display. State synchronises through `BroadcastChannel` and `localStorage`.
 
 For Netlify, publish the Vite `dist` directory.
+
+## v1.1.0 — Controller-first two-screen mode
+- Default URL opens the Fighter Control screen.
+- A dedicated **OPEN RADAR SCREEN** button opens the radar display in a second browser tab/window.
+- Radar URL: `?view=radar`.
+- Control and radar share simulation state using `BroadcastChannel` with `localStorage` fallback.
+- Control screen is focused on fighter/Voyager instructions, QRA, contact selection, notes and NATO-style command output.
+- Radar screen is intentionally uncluttered and map-focused.
