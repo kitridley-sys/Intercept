@@ -1,178 +1,91 @@
-import { useEffect, useMemo, useState } from 'react'
+import {useEffect,useMemo,useState} from 'react'
 
-type Aircraft = {
-  id: string
-  callsign: string
-  x: number
-  y: number
-  heading: number
-  speed: number
-  altitude: number
-  fuel: number
-  friendly?: boolean
-}
-
-const initialTargets: Aircraft[] = [
-  { id: 'T421', callsign: 'TRACK 421', x: 79, y: 28, heading: 235, speed: 420, altitude: 280, fuel: 100 },
-  { id: 'T315', callsign: 'TRACK 315', x: 20, y: 67, heading: 35, speed: 390, altitude: 240, fuel: 100 },
+const VERSION='0.3.0'
+type Plane={id:string;name:string;x:number;y:number;heading:number;speed:number;alt:number;fuel:number;airborne:boolean;friendly:boolean}
+type Base={id:string;name:string;x:number;y:number;aircraft:number}
+const bases:Base[]=[
+ {id:'L',name:'LOSSIEMOUTH',x:31,y:12,aircraft:2},
+ {id:'C',name:'CONINGSBY',x:67,y:66,aircraft:2},
 ]
-
-const initialFighters: Aircraft[] = [
-  { id: 'F21', callsign: 'TYPHOON 21', x: 57, y: 73, heading: 315, speed: 450, altitude: 250, fuel: 82, friendly: true },
-  { id: 'F22', callsign: 'TYPHOON 22', x: 35, y: 40, heading: 90, speed: 450, altitude: 250, fuel: 64, friendly: true },
+const initialTargets:Plane[]=[
+ {id:'T421',name:'TRACK 421',x:87,y:31,heading:235,speed:430,alt:280,fuel:100,airborne:true,friendly:false},
+ {id:'T315',name:'TRACK 315',x:12,y:78,heading:35,speed:390,alt:240,fuel:100,airborne:true,friendly:false},
 ]
+const initialFighters:Plane[]=[
+ {id:'F21',name:'TYPHOON 21',x:67,y:66,heading:315,speed:450,alt:250,fuel:88,airborne:false,friendly:true},
+ {id:'F22',name:'TYPHOON 22',x:31,y:12,heading:135,speed:450,alt:250,fuel:78,airborne:false,friendly:true},
+]
+const clamp=(n:number,a=4,b=96)=>Math.max(a,Math.min(b,n))
+const move=(p:Plane,dt:number)=>{const r=p.heading*Math.PI/180,s=.00115;return {...p,x:clamp(p.x+Math.sin(r)*p.speed*dt*s),y:clamp(p.y-Math.cos(r)*p.speed*dt*s)}}
+const dist=(a:Plane,b:Plane)=>Math.hypot(a.x-b.x,a.y-b.y)
+const brg=(a:Plane,b:Plane)=>Math.round((Math.atan2(b.x-a.x,-(b.y-a.y))*180/Math.PI+360)%360)
+const ang=(a:number,b:number)=>Math.abs(((a-b+540)%360)-180)
 
-function destination(x: number, y: number, heading: number, speed: number, dt: number) {
-  const scale = 0.00125
-  const r = heading * Math.PI / 180
-  return {
-    x: x + Math.sin(r) * speed * dt * scale,
-    y: y - Math.cos(r) * speed * dt * scale,
-  }
+function predictIntercept(f:Plane,t:Plane){
+ const dx=t.x-f.x,dy=t.y-f.y
+ const tr=t.heading*Math.PI/180, fr=f.heading*Math.PI/180
+ const tvx=Math.sin(tr)*t.speed, tvy=-Math.cos(tr)*t.speed
+ const relx=dx,rely=dy
+ const a=tvx*tvx+tvy*tvy-f.speed*f.speed
+ const b=2*(relx*tvx+rely*tvy)
+ const c=relx*relx+rely*rely
+ let sec=0
+ if(Math.abs(a)<.0001) sec=b?Math.max(0,-c/b):0
+ else {const disc=b*b-4*a*c;if(disc>=0){const r1=(-b-Math.sqrt(disc))/(2*a),r2=(-b+Math.sqrt(disc))/(2*a);const roots=[r1,r2].filter(r=>r>0);sec=roots.length?Math.min(...roots):0}}
+ if(!sec) sec=Math.max(1,dist(f,t)*.9)
+ const px=t.x+Math.sin(tr)*t.speed*sec*.00115
+ const py=t.y-Math.cos(tr)*t.speed*sec*.00115
+ const point={x:clamp(px),y:clamp(py)}
+ const heading=Math.round((Math.atan2(point.x-f.x,-(point.y-f.y))*180/Math.PI+360)%360)
+ return {sec,point,heading}
 }
 
-function bearing(a: Aircraft, b: Aircraft) {
-  const dx = b.x - a.x
-  const dy = -(b.y - a.y)
-  let deg = Math.atan2(dx, dy) * 180 / Math.PI
-  if (deg < 0) deg += 360
-  return Math.round(deg)
-}
-
-function distance(a: Aircraft, b: Aircraft) {
-  return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2)
-}
-
-export default function App() {
-  const [targets, setTargets] = useState(initialTargets)
-  const [fighters, setFighters] = useState(initialFighters)
-  const [selectedTarget, setSelectedTarget] = useState('T421')
-  const [selectedFighter, setSelectedFighter] = useState('F21')
-  const [vector, setVector] = useState(315)
-  const [running, setRunning] = useState(true)
-  const [score, setScore] = useState(0)
-  const [message, setMessage] = useState('TRAINING: Select a track and fighter, then issue a vector.')
-  const [assistance, setAssistance] = useState(true)
-
-  const target = targets.find(t => t.id === selectedTarget)!
-  const fighter = fighters.find(f => f.id === selectedFighter)!
-  const range = distance(fighter, target) * 12
-  const brg = bearing(fighter, target)
-  const suggestedVector = useMemo(() => {
-    const lead = Math.min(55, Math.max(8, range / 3))
-    return Math.round((brg + (target.heading - brg) * lead / 55 + 360) % 360)
-  }, [brg, range, target.heading])
-
-  useEffect(() => {
-    if (!running) return
-    const timer = setInterval(() => {
-      setTargets(ts => ts.map(t => {
-        const p = destination(t.x, t.y, t.heading, t.speed, 1)
-        return { ...t, x: p.x, y: p.y }
-      }))
-      setFighters(fs => fs.map(f => {
-        const p = destination(f.x, f.y, f.heading, f.speed, 1)
-        return { ...f, x: p.x, y: p.y, fuel: Math.max(0, f.fuel - 0.025) }
-      }))
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [running])
-
-  function issueVector() {
-    const error = Math.abs(((vector - suggestedVector + 540) % 360) - 180)
-    const points = Math.max(0, 100 - Math.round(error * 2))
-    setScore(s => s + points)
-    setFighters(fs => fs.map(f => f.id === selectedFighter ? { ...f, heading: vector } : f))
-    setMessage(error <= 8
-      ? `GOOD VECTOR. ${points} points awarded.`
-      : `VECTOR ACCEPTED. ${points} points. Try to lead the target more effectively.`)
-  }
-
-  function reset() {
-    setTargets(initialTargets)
-    setFighters(initialFighters)
-    setScore(0)
-    setRunning(true)
-    setMessage('TRAINING RESET.')
-  }
-
-  return (
-    <main>
-      <header>
-        <div>
-          <div className="eyebrow">AIR DEFENCE TRAINING SYSTEM</div>
-          <h1>RAF INTERCEPT <span>MVP</span></h1>
-        </div>
-        <div className="status"><b>SECTOR:</b> UK EAST <i>● LIVE</i></div>
-      </header>
-
-      <section className="layout">
-        <div className="radar">
-          <div className="rings" />
-          <div className="crosshair" />
-          <div className="north">N</div>
-          {targets.map(t => (
-            <button key={t.id} className={`contact target ${selectedTarget===t.id?'selected':''}`}
-              style={{left:`${t.x}%`, top:`${t.y}%`}} onClick={() => setSelectedTarget(t.id)}>
-              ◆
-            </button>
-          ))}
-          {fighters.map(f => (
-            <button key={f.id} className={`contact fighter ${selectedFighter===f.id?'selected':''}`}
-              style={{left:`${f.x}%`, top:`${f.y}%`}} onClick={() => setSelectedFighter(f.id)}>
-              ▲
-            </button>
-          ))}
-          <div className="legend"><span>◆ UNKNOWN</span><span>▲ FRIENDLY</span></div>
-        </div>
-
-        <aside>
-          <div className="panel">
-            <h2>TRACK DATA</h2>
-            <div className="big">{target.callsign}</div>
-            <div className="grid">
-              <label>BRG <strong>{bearing({x: fighter.x, y: fighter.y, heading:0, speed:0, altitude:0, fuel:0} as Aircraft, target).toString().padStart(3,'0')}°</strong></label>
-              <label>RNG <strong>{range.toFixed(1)} NM</strong></label>
-              <label>SPD <strong>{target.speed} KT</strong></label>
-              <label>ALT <strong>FL{target.altitude}</strong></label>
-              <label>HDG <strong>{target.heading.toString().padStart(3,'0')}°</strong></label>
-              <label>STATUS <strong>UNKNOWN</strong></label>
-            </div>
-          </div>
-
-          <div className="panel">
-            <h2>QRA / FIGHTER</h2>
-            <select value={selectedFighter} onChange={e=>setSelectedFighter(e.target.value)}>
-              {fighters.map(f => <option key={f.id} value={f.id}>{f.callsign} — {Math.round(f.fuel)}% FUEL</option>)}
-            </select>
-            <div className="grid">
-              <label>HDG <strong>{fighter.heading.toString().padStart(3,'0')}°</strong></label>
-              <label>SPD <strong>{fighter.speed} KT</strong></label>
-              <label>ALT <strong>FL{fighter.altitude}</strong></label>
-              <label>FUEL <strong>{Math.round(fighter.fuel)}%</strong></label>
-            </div>
-          </div>
-
-          <div className="panel command">
-            <h2>VECTOR COMMAND</h2>
-            <input type="range" min="0" max="359" value={vector} onChange={e=>setVector(Number(e.target.value))}/>
-            <div className="vector"><span>VECTOR</span><strong>{vector.toString().padStart(3,'0')}°</strong></div>
-            {assistance && <div className="hint">TRAINING HINT: Suggested vector {suggestedVector.toString().padStart(3,'0')}°</div>}
-            <button className="primary" onClick={issueVector}>ISSUE VECTOR</button>
-          </div>
-
-          <div className="panel">
-            <h2>CONTROLLER SCORE</h2>
-            <div className="score">{score}</div>
-            <p className="message">{message}</p>
-            <label className="toggle"><input type="checkbox" checked={assistance} onChange={e=>setAssistance(e.target.checked)}/> Training assistance</label>
-            <div className="actions">
-              <button onClick={()=>setRunning(!running)}>{running?'PAUSE':'RESUME'}</button>
-              <button onClick={reset}>RESET MISSION</button>
-            </div>
-          </div>
-        </aside>
-      </section>
-    </main>
-  )
+export default function App(){
+ const [targets,setTargets]=useState(initialTargets),[fighters,setFighters]=useState(initialFighters)
+ const [selT,setSelT]=useState('T421'),[selF,setSelF]=useState('F21'),[vector,setVector]=useState(285)
+ const [base,setBase]=useState('C'),[score,setScore]=useState(0),[running,setRunning]=useState(true)
+ const [assist,setAssist]=useState(true),[scrambled,setScrambled]=useState<string[]>([])
+ const [msg,setMsg]=useState('CONTACT! Assess the track, select QRA, then scramble.')
+ const [debrief,setDebrief]=useState<string[]>([])
+ const target=targets.find(p=>p.id===selT)!,fighter=fighters.find(p=>p.id===selF)!
+ const range=dist(fighter,target)*14,bearing=brg(fighter,target)
+ const prediction=useMemo(()=>predictIntercept(fighter,target),[fighter,target])
+ const targetEta=Math.max(0,range/Math.max(1,fighter.speed-target.speed*.35)*60)
+ const interceptRange=Math.hypot(prediction.point.x-fighter.x,prediction.point.y-fighter.y)*14
+ useEffect(()=>{if(!running)return;const id=setInterval(()=>{setTargets(ts=>ts.map(t=>move(t,1)));setFighters(fs=>fs.map(f=>f.airborne?{...move(f,1),fuel:Math.max(0,f.fuel-.035)}:f))},1000);return()=>clearInterval(id)},[running])
+ function scramble(){
+  if(scrambled.includes(selF)){setMsg(`${fighter.name} already airborne.`);return}
+  setScrambled(s=>[...s,selF]);setFighters(fs=>fs.map(f=>f.id===selF?{...f,airborne:true}:f))
+  const chosen=bases.find(b=>b.id===base)!
+  const d=Math.hypot(fighter.x-chosen.x,fighter.y-chosen.y),pts=Math.max(0,150-Math.round(d*4))
+  setScore(s=>s+pts);setDebrief(d=>[`QRA: ${chosen.name} selected — +${pts}`,...d].slice(0,5));setMsg(`${chosen.name} QRA scrambled. ${pts} points.`)
+ }
+ function issueVector(){
+  if(!fighter.airborne){setMsg('FIGHTER NOT AIRBORNE — SCRAMBLE QRA FIRST.');return}
+  const e=ang(vector,prediction.heading),pts=Math.max(0,140-Math.round(e*2))
+  setScore(s=>s+pts);setFighters(fs=>fs.map(f=>f.id===selF?{...f,heading:vector}:f))
+  setDebrief(d=>[`VECTOR ${vector.toString().padStart(3,'0')}° — error ${e}° — +${pts}`,...d].slice(0,5))
+  setMsg(e<=8?`EXCELLENT VECTOR. ${pts} points. Predicted intercept in ${prediction.sec.toFixed(1)} sec.`:`VECTOR ACCEPTED. ${pts} points. Predicted intercept heading ${prediction.heading.toString().padStart(3,'0')}°.`)
+ }
+ function reset(){setTargets(initialTargets);setFighters(initialFighters);setScrambled([]);setScore(0);setRunning(true);setDebrief([]);setMsg('NEW SCENARIO — CONTACT!')}
+ return <main>
+  <header><div><div className="eyebrow">AIR DEFENCE TRAINING SYSTEM</div><h1>RAF INTERCEPT <span>STAGE 3</span></h1></div><div className="topright"><span>VERSION {VERSION}</span><b>SECTOR: NORTH SEA / UK EAST</b><i>● LIVE</i></div></header>
+  <section className="layout">
+   <div className="map"><div className="gridlines"/><div className="sea-label">NORTH SEA</div><div className="land uk"><span>UNITED KINGDOM</span></div><div className="land eu"><span>CONTINENTAL EUROPE</span></div>
+    {bases.map(b=><button key={b.id} className={`base ${base===b.id?'chosen':''}`} style={{left:`${b.x}%`,top:`${b.y}%`}} onClick={()=>setBase(b.id)}>✦<small>{b.name}</small></button>)}
+    {targets.map(t=><button key={t.id} className={`contact target ${selT===t.id?'selected':''}`} style={{left:`${t.x}%`,top:`${t.y}%`}} onClick={()=>setSelT(t.id)}>◆<small>{t.name}</small></button>)}
+    {fighters.map(f=><button key={f.id} className={`contact fighter ${selF===f.id?'selected':''}`} style={{left:`${f.x}%`,top:`${f.y}%`}} onClick={()=>setSelF(f.id)}>▲<small>{f.name}</small></button>)}
+    {assist&&<><div className="intercept-line" style={{left:`${fighter.x}%`,top:`${fighter.y}%`,width:`${interceptRange/14}%`,transform:`rotate(${prediction.heading}deg)`}}/><div className="predicted" style={{left:`${prediction.point.x}%`,top:`${prediction.point.y}%`}}>×<small>PIP</small></div></>}
+    <div className="mapnote">SCHEMATIC GAME MAP — NOT FOR NAVIGATION</div>
+   </div>
+   <aside>
+    <div className="panel"><h2>CONTACT ASSESSMENT</h2><div className="big">{target.name}</div><div className="grid"><label>BRG <strong>{bearing.toString().padStart(3,'0')}°</strong></label><label>RNG <strong>{range.toFixed(0)} NM</strong></label><label>SPD <strong>{target.speed} KT</strong></label><label>ALT <strong>FL{target.alt}</strong></label><label>HDG <strong>{target.heading.toString().padStart(3,'0')}°</strong></label><label>ETA <strong>{targetEta.toFixed(1)} MIN</strong></label></div></div>
+    <div className="panel"><h2>QRA SELECTION</h2>{bases.map(b=><button className={`baseRow ${base===b.id?'active':''}`} key={b.id} onClick={()=>setBase(b.id)}><span>{b.name}</span><b>{b.aircraft} READY</b></button>)}<button className="primary" onClick={scramble}>SCRAMBLE SELECTED QRA</button></div>
+    <div className="panel"><h2>INTERCEPT PREDICTION</h2><div className="grid"><label>PIP HDG <strong>{prediction.heading.toString().padStart(3,'0')}°</strong></label><label>TIME <strong>{prediction.sec.toFixed(1)} SEC</strong></label><label>PIP RNG <strong>{interceptRange.toFixed(0)} NM</strong></label><label>CPA <strong>{prediction.sec<90?'GOOD':'LONG'}</strong></label></div></div>
+    <div className="panel"><h2>FIGHTER STATUS</h2><select value={selF} onChange={e=>setSelF(e.target.value)}>{fighters.map(f=><option key={f.id} value={f.id}>{f.name} — {f.airborne?'AIRBORNE':'QRA'} — {Math.round(f.fuel)}%</option>)}</select><div className="grid"><label>STATE <strong>{fighter.airborne?'AIRBORNE':'QRA'}</strong></label><label>FUEL <strong>{Math.round(fighter.fuel)}%</strong></label><label>HDG <strong>{fighter.heading.toString().padStart(3,'0')}°</strong></label><label>SPD <strong>{fighter.speed} KT</strong></label></div></div>
+    <div className="panel command"><h2>VECTOR COMMAND</h2><input type="range" min="0" max="359" value={vector} onChange={e=>setVector(+e.target.value)}/><div className="vector"><span>VECTOR</span><strong>{vector.toString().padStart(3,'0')}°</strong></div>{assist&&<div className="hint">TRAINING: predicted intercept heading {prediction.heading.toString().padStart(3,'0')}°</div>}<button className="primary" onClick={issueVector}>ISSUE VECTOR</button></div>
+    <div className="panel"><h2>CONTROLLER ASSESSMENT</h2><div className="score">{score}</div><p className="message">{msg}</p><label className="toggle"><input type="checkbox" checked={assist} onChange={e=>setAssist(e.target.checked)}/> Training assistance</label><div className="debrief">{debrief.map((x,i)=><div key={i}>{x}</div>)}</div><div className="actions"><button onClick={()=>setRunning(!running)}>{running?'PAUSE':'RESUME'}</button><button onClick={reset}>NEW SCENARIO</button></div></div>
+   </aside>
+  </section>
+ </main>
 }
