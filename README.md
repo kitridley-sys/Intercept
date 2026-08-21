@@ -1,8 +1,8 @@
-# RAF INTERCEPT v0.8.0
+# RAF INTERCEPT v1.0.0
 
 Military-style radar plotting interface for the RAF INTERCEPT training game.
 
-## New in v0.8.0
+## New in v1.0.0
 - Much larger operational map / scale.
 - Zoom in/out with mouse wheel, on-screen +/− controls and buttons.
 - Pan the map by click-dragging on desktop/Chromebook and touch-dragging on supported tablets.
@@ -23,3 +23,22 @@ npm install
 npm run dev
 
 For Netlify: publish directory `dist`, build command `npm run build`.
+
+
+## v1.0.0
+- Larger UI fonts for Chromebook/tablet readability.
+- RAF aircraft are blue square contacts.
+- Hostile and unidentified aircraft are red square contacts.
+- UK is shown as a distinct country, with Ireland separately outlined.
+
+
+## v1.0.0 — Two-screen controller layout
+
+The simulator now has two purpose-built views that share live state between browser tabs/windows:
+
+- `?view=radar` — uncluttered radar/plotting display for Monitor 1.
+- `?view=control` — aircraft selection, contact notes, QRA scramble, vector, AAR, RTB and declaration controls for Monitor 2.
+
+Open the app normally and use **OPEN CONTROL TAB** / **OPEN RADAR TAB**. Put the two browser windows on separate monitors. The Control view owns the simulation clock; the Radar view is a passive shared display. State synchronises through `BroadcastChannel` and `localStorage`.
+
+For Netlify, publish the Vite `dist` directory.
