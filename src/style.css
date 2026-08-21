@@ -48,3 +48,12 @@
 .radarPage{height:100dvh;display:grid;grid-template-rows:54px 1fr;background:#020807}.radarPage header{display:flex;align-items:center;gap:18px;padding:0 12px;border-bottom:1px solid #284a36;background:#030a07}.radarPage header button{margin-left:auto}.radarBody{display:grid;grid-template-columns:160px 1fr;min-height:0}.radarFull .mapFrame{padding:4px}.radarFull .mapViewport{height:100%}
 @media(max-width:1050px){.controlBody{grid-template-columns:220px minmax(0,1fr) 230px}.voyGrid{grid-template-columns:1fr 1fr}.voyGrid button{grid-column:1/3}.fighterName{font-size:22px}.nato{font-size:11px}}
 @media(max-width:760px){.controlOnly{grid-template-rows:50px 1fr}.controlBody{display:block;overflow:auto}.controlLeft,.controlRight{display:block;border:0;padding:8px}.controlMain{padding:8px}.controlLeft section:first-child{display:block}.fighterHeader{display:block}.fuelLarge{width:100%;margin-top:12px}.commandGrid{grid-template-columns:1fr}.commandGrid .hostile{grid-column:auto}.voyGrid{grid-template-columns:1fr}.voyGrid button{grid-column:auto}.openRadar{font-size:9px;padding:0 7px!important}.headstat{display:none}.title{font-size:14px}.clock{font-size:11px}}
+
+/* v1.2 — Natural Earth 10m geographic base */
+.mapFrame{position:relative;overflow:hidden}
+.geoMap{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.country{fill:#102018;fill-opacity:.92;stroke:#6c8757;stroke-width:.16;vector-effect:non-scaling-stroke}
+.countryUK{fill:#13281c;stroke:#9aaa72;stroke-width:.24}
+.mapLoading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6c9472;font-size:10px;z-index:2;background:#020807}
+.mapCanvas{isolation:isolate}
+.mapCanvas .grid{z-index:2}.mapCanvas .sea{z-index:3}.mapCanvas .contact,.mapCanvas .qra,.mapCanvas .voyager,.mapCanvas .rings,.mapCanvas .interceptLine,.mapCanvas .wp,.mapCanvas .airway{z-index:6}
