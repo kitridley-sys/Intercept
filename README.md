@@ -1,18 +1,20 @@
-# RAF INTERCEPT — Stage 6 v0.6.0
+# RAF INTERCEPT — v0.7.0
 
-Stage 6 adds a fuel-aware decision engine.
+Tablet / Chromebook optimised interface.
 
-New:
-- Recommended action: INTERCEPT / AAR / RTB
-- Fuel at predicted intercept
-- Fuel remaining on return to selected base
-- Endurance estimate
-- Bingo and reserve thresholds
-- RTB command with automatic return heading
-- Voyager AAR range decision
-- Fuel-aware scoring and controller debrief
-- Multiple airborne fighters retained
-- Radar, heading bugs, ghost trails, PIP and QRA retained
+Changes:
+- Large North Sea map is now the primary focus.
+- Simplified geography and reduced visual clutter.
+- Responsive layout for Chromebook, tablet landscape and tablet portrait.
+- Touch-friendly command controls.
+- Desktop/Chromebook uses side information panels and a bottom command deck.
+- Tablet/mobile collapses to the map with a compact five-button command bar.
+- Large, readable contact labels, heading bugs and ghost trails.
+- QRA, fuel, Voyager AAR, intercept and RTB gameplay retained.
+- Training assistance can be toggled.
+- No advertising or ad SDKs are included in this project.
+- v0.7.0 is still a training/game simulation; live ADS-B integration is not included yet.
 
-This is a simulation/game. It is not a real-world air-defence or navigation system.
-Run: npm install && npm run dev
+Run:
+npm install
+npm run dev
