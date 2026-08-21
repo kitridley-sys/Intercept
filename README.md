@@ -50,3 +50,13 @@ For Netlify, publish the Vite `dist` directory.
 - Control and radar share simulation state using `BroadcastChannel` with `localStorage` fallback.
 - Control screen is focused on fighter/Voyager instructions, QRA, contact selection, notes and NATO-style command output.
 - Radar screen is intentionally uncluttered and map-focused.
+
+
+## v1.2.0 — Accurate North Sea geography
+- Radar display uses Natural Earth 10m Admin-0 country geometry rather than hand-drawn CSS silhouettes.
+- UK, Ireland, Norway, Denmark, Netherlands, Germany, Belgium and France are rendered as separate country polygons.
+- Geometry is projected into the North Sea operating area and remains compatible with zoom/pan.
+- Data is loaded from the Natural Earth GeoJSON distribution at runtime; Natural Earth data is public domain.
+- The app falls back to the existing dark tactical presentation while the coastline data loads.
+
+Data source: Natural Earth 10m Admin-0 Countries.
