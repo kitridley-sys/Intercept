@@ -1,25 +1,17 @@
-# RAF INTERCEPT v2.2.0
+# RAF INTERCEPT v2.2.1
 
-## Radar rebuild
+## Radar display fix
 
-The radar screen has been rebuilt around the supplied radar reference image.
+The supplied radar reference image is now loaded as a **direct CSS background** on the radar viewport, with a second background layer inside the zoom/pan canvas. This avoids the previous image rendering issue.
 
-The reference image is now the **sole geographic/radar base layer**. The application does not draw an additional map, coastline, grid or artificial geography over it.
+The reference image is the sole geographic base. Live RAF/unknown contacts, heading bugs, trails and QRA markers are layered above it.
 
-Live application elements are rendered above the image:
-- RAF blue-square aircraft
-- Unknown/hostile red-square aircraft
-- Ghost trails
-- Heading bugs
-- QRA base markers
-- Zoom and pan controls
+The controller interface remains on the separate Fighter Control screen.
 
-The aircraft instruction/detail interface remains on the separate Fighter Control screen.
+Run:
+`npm install`
+`npm run dev`
 
-### Run
-npm install
-npm run dev
-
-### Netlify
-Build command: `npm run build`
-Publish directory: `dist`
+Netlify:
+Build command `npm run build`
+Publish directory `dist`
