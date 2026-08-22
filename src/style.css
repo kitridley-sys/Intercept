@@ -226,7 +226,7 @@
 .referenceRadarViewport{position:relative!important;overflow:hidden!important;background:#06131f!important;cursor:grab}
 .referenceRadarViewport:active{cursor:grabbing}
 .referenceRadarCanvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;transform-origin:center center!important}
-.referenceCountryMap{z-index:1!important;background:#06131f}
+.referenceCountryMap{z-index:1!important;top:-12.5%!important;bottom:auto!important;height:125%!important;background:#06131f}
 .referenceCountryMap .country{fill:none!important;stroke:#82a897!important;stroke-width:.23!important;vector-effect:non-scaling-stroke}
 .referenceCountryMap .countryUK{fill:none!important;stroke:#b7d0a8!important;stroke-width:.32!important}
 .referenceRadarCanvas .mapLoading{z-index:1!important;background:#06131f!important;color:#719383!important}
@@ -238,16 +238,18 @@
 .contact{position:absolute}
 .contact .sym{display:block;width:11px;height:11px;border:2px solid #d95b5b;background:rgba(60,0,0,.35);box-sizing:border-box}
 .contact.friendly .sym{border-color:#55a9e8;background:rgba(0,55,90,.35)}
+.contact.civil .sym{border-color:#f1bd58;background:rgba(91,63,10,.45);border-radius:50%;box-shadow:0 0 7px rgba(241,189,88,.55)}
 .contact.selected .sym{box-shadow:0 0 0 2px rgba(255,255,255,.8),0 0 8px rgba(255,255,255,.55)}
 .contact .bug{position:absolute;left:5px;top:-18px;width:1px;height:18px;background:#d95b5b;transform-origin:bottom center}
 .contact.friendly .bug{background:#55a9e8}
+.contact.civil .bug{background:#f1bd58}
 .referenceZoomControls{position:absolute;right:14px;top:14px;display:flex;gap:5px;z-index:30}
 .referenceZoomControls button{width:34px;height:34px;background:rgba(4,13,16,.9);border:1px solid #466156;color:#d1e0d8;font-size:17px}
 .radarTools .radarLegend{display:flex;flex-direction:column;gap:7px;margin-top:18px;padding:10px;background:#081713;border:1px solid #36564b;color:#c5d5cd;font-size:10px;line-height:1.25}
 .radarTools .radarLegend h3{margin:0 0 2px;color:#a9bbb3}
 .radarTools .radarLegend span{white-space:nowrap}
 .legendBlue{color:#52a9e8}.legendRed{color:#d55d5d}
-.legendQra{color:#7bb69d}.legendLine{color:#d4deda}
+.legendCivil{color:#f1bd58}.legendQra{color:#7bb69d}.legendLine{color:#d4deda}
 .referenceQra{position:absolute;color:#7bb69d;font-size:15px;text-shadow:0 0 5px #000;pointer-events:none}
 .liveTrail{position:absolute;width:80px;height:1px;background:rgba(210,80,80,.45);transform-origin:left center;pointer-events:none}
 .headingBug{position:absolute;width:36px;height:2px;background:rgba(255,110,110,.8);transform-origin:0 50%;pointer-events:none}
@@ -256,3 +258,28 @@
  .referenceRadarBody{grid-template-columns:1fr}
  .radarTools{position:absolute;z-index:40;left:0;top:0;width:145px;opacity:.96}
 }
+
+/* v2.3 — Fighter Controller mission prototype */
+.missionControl .controlBody{grid-template-columns:270px minmax(0,1fr) 260px}
+.fighterTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:14px 0}
+.fighterTabs button{padding:8px 4px;background:#07130e;font-size:10px;font-weight:700}
+.fighterTabs button small{display:block;margin-top:4px;color:#809a89;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fighterTabs .activeFighter{border-color:#55a9e8;background:#082035;color:#d2eaff}
+.groundActions{display:flex;gap:10px;align-items:center;padding:15px;border:1px solid #274936;background:#07120d}
+.groundActions>div{flex:1}.groundActions p{margin:6px 0 0;color:#82a08c;font-size:11px;line-height:1.45}
+.groundActions button,.supportGrid button,.divert button{padding:11px 9px;font-size:10px;font-weight:800}
+.scramble{background:#471512!important;border-color:#c44842!important;color:#ffd1cc!important}
+.scramble:disabled{opacity:.4;cursor:not-allowed}
+.commandInputs{display:grid;grid-template-columns:repeat(3,1fr) auto auto;gap:8px;align-items:end;margin:14px 0 8px}
+.commandInputs label{position:relative;color:#8da895;font-size:10px}.commandInputs input[type=number]{display:block;width:100%;margin-top:4px;padding:9px;background:#020a06;border:1px solid #3a5d46;color:#d5e7d8;font-size:18px;font-weight:800}.commandInputs label small{position:absolute;right:7px;bottom:10px;color:#77a17f;font-size:9px}.commandInputs .reheat{height:40px;display:flex;align-items:center;gap:5px;padding:0 8px;border:1px solid #7c5421;background:#2d210a;color:#f3cd72;white-space:nowrap}.commandInputs .primary{height:40px;padding:0 12px;background:#0a3450;border-color:#3983b2;color:#c8e8ff;font-weight:800;white-space:nowrap}
+.prediction{padding:10px;background:#071813;border:1px solid #315842;color:#a9d7b3;font-size:11px}
+.supportGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.supportGrid .aar{background:#30280a;border-color:#846f25;color:#f4d876}.supportGrid .rtb{background:#0a3419;border-color:#498b58;color:#b1e9b7}.divert{display:grid;grid-template-columns:1fr auto;background:#3b100e;border:1px solid #91423b}.divert select{min-width:0;background:#240a09;border:0;color:#ffd6cf;padding:0 8px;font:inherit;font-size:10px}.divert button{background:transparent;border:0;border-left:1px solid #91423b;color:#ffd6cf}
+.fuelLow{background:#b63c35!important}.amberDot{width:9px;height:9px;border:2px solid #f1bd58;background:#5d420a;border-radius:50%;display:inline-block}.civilText{color:#f1bd58}.radioLog{max-height:165px;overflow:auto;border-top:1px solid #183423}.radioLog div{padding:7px 0;border-bottom:1px solid #183423;color:#9eb7aa;font-size:9px;line-height:1.35}.radioLog div:first-child{color:#d5ebdd}
+@media(max-width:1100px){.missionControl .controlBody{grid-template-columns:220px minmax(0,1fr) 220px}.fighterTabs{grid-template-columns:repeat(2,1fr)}.commandInputs{grid-template-columns:repeat(3,1fr)}.commandInputs .reheat,.commandInputs .primary{height:36px}.supportGrid{grid-template-columns:1fr}}
+.radarCallsign{position:absolute;left:14px;top:-4px;color:#e2eee8;font-size:9px;font-weight:800;white-space:nowrap;text-shadow:0 1px 3px #000;pointer-events:none}
+.referenceQra span{font-size:8px;font-weight:800;vertical-align:2px;white-space:nowrap}
+.trackButton,.intelButton{width:100%;margin-top:7px;padding:9px;font-size:10px;font-weight:800}.trackButton{background:#342408;border-color:#8e6a25;color:#f1d477}.intelButton{background:#082138;border-color:#397ba3;color:#b9ddf4}.trackButton:disabled,.intelButton:disabled{opacity:.45}.intelPanel{margin-top:9px;padding:9px;border:1px solid #315b72;background:#06131d;color:#bad4e4;font-size:10px;line-height:1.4}.intelPanel b{color:#71bee9;font-size:9px}.intelPanel p{margin:7px 0 0}.tankerStatus{display:flex;justify-content:space-between;gap:12px;padding:10px;border:1px solid #403920;background:#111207;color:#e0d89c;font-size:11px}.tankerStatus span{color:#9fa279}.tankerActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.tankerActions button{padding:10px;font-size:10px;font-weight:800}
+.tankerActions .aar{font-size:0}.tankerActions .aar::after{content:'VECTOR TO SELECTED FIGHTER';font-size:10px}
+
+/* v2.3 workflow controller */
+.workflow{grid-template-rows:54px 1fr;background:#020807}.workflowBody{display:grid;grid-template-columns:280px minmax(420px,1fr) 300px;min-height:0}.workflow h2{margin:0 0 12px;color:#9ac4a4;font-size:12px;letter-spacing:.1em}.workflow h3{margin:0 0 8px;color:#86af91;font-size:10px;letter-spacing:.08em}.workflowAircraft,.workflowContacts{overflow:auto;padding:12px;background:#030b07}.workflowAircraft{border-right:1px solid #284a36}.workflowContacts{border-left:1px solid #284a36}.workflowAircraft section,.workflowContacts section{margin-bottom:12px;padding:10px;border:1px solid #234733;background:#05100a}.aircraftCard{display:flex;flex-direction:column;width:100%;gap:4px;margin:4px 0;padding:10px;text-align:left;background:#07140e}.aircraftCard span{font-size:10px;color:#92a99a}.aircraftCard small{font-size:9px;color:#78927f}.selectedAircraft{border-color:#55a9e8;background:#082034}.aircraftCard.emergency{border-color:#d3544e;background:#300b09}.workflowCommands{overflow:auto;padding:16px;background:radial-gradient(circle at 50% 12%,#0b1c12,#020807 65%)}.selectedSummary{display:flex;align-items:baseline;gap:12px;padding:14px;border:1px solid #315b42;background:#07160e}.selectedSummary b{font-size:24px;color:#66baff}.selectedSummary span{color:#94b19b;font-size:11px}.selectedSummary em{margin-left:auto;font-style:normal;color:#bad4bf;font-size:11px}.emergencyText{color:#ff7770!important}.groundWorkflow{display:flex;align-items:center;gap:9px;margin-top:12px;padding:13px;border:1px solid #315b42;background:#07130d}.groundWorkflow p{flex:1;margin:0;color:#a5bba9;font-size:12px;line-height:1.4}.groundWorkflow button,.tankerWorkflow button{padding:11px;font-size:10px;font-weight:800}.groundWorkflow strong{color:#f5d37c;font-size:10px;white-space:nowrap}.vectorWorkflow{display:grid;grid-template-columns:repeat(3,1fr) auto auto;gap:8px;align-items:end;margin-top:12px;padding:13px;border:1px solid #315b42;background:#07130d}.vectorWorkflow label{position:relative;font-size:10px;color:#8fa999}.vectorWorkflow input[type=number]{display:block;width:100%;margin-top:4px;padding:9px;background:#020a06;border:1px solid #426247;color:#d7ead5;font-size:18px;font-weight:800}.vectorWorkflow label small{position:absolute;right:8px;bottom:10px}.vectorWorkflow .reheat{height:40px;display:flex;align-items:center;gap:4px;padding:0 8px;border:1px solid #7d5825;background:#30240c;color:#f1d879}.vectorWorkflow .primary{height:40px;background:#0a3450;border-color:#3983b2;color:#d0ecff;font-weight:800;white-space:nowrap}.vectorAdvice{padding:10px;border:1px solid #315b42;background:#081a11;color:#b9dfc1;font-size:11px}.recoveryWorkflow{display:grid;grid-template-columns:1fr 120px 1fr;gap:8px;margin-top:10px}.recoveryWorkflow button,.recoveryWorkflow select{padding:10px;font-size:10px;font-weight:800}.recoveryWorkflow select{background:#230a09;border:1px solid #8d423b;color:#ffd5cf}.emergencyButton{background:#3a0c0a;border-color:#943d36;color:#ffd0ca}.tankerWorkflow{margin-top:12px;padding:13px;border:1px solid #735f22;background:#161407}.tankerWorkflow p{margin:4px 0 10px;color:#b6ae78;font-size:11px}.tankerWorkflow button{margin-right:7px}.contactList{display:flex;flex-direction:column;gap:5px}.contactList button{display:flex;justify-content:space-between;padding:10px;text-align:left}.contactList span{font-size:10px;color:#e78780}.selectedContact{border-color:#5a9b6a;background:#0b2516}.contactDetail p{display:flex;justify-content:space-between;margin:7px 0;font-size:11px;color:#8fa891}.contactDetail p b{color:#d7e7d9}@media(max-width:1050px){.workflowBody{grid-template-columns:230px minmax(380px,1fr) 240px}.vectorWorkflow{grid-template-columns:repeat(3,1fr)}.vectorWorkflow .reheat,.vectorWorkflow .primary{height:36px}}@media(max-width:780px){.workflowBody{display:block;overflow:auto}.workflowAircraft,.workflowContacts{border:0}.vectorWorkflow,.recoveryWorkflow{grid-template-columns:1fr 1fr}.workflowCommands{min-height:auto}}
