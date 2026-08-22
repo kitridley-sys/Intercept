@@ -1,8 +1,8 @@
-# RAF INTERCEPT v2.0.0
+# RAF INTERCEPT v2.1.0
 
 A two-screen RAF air defence interception simulator.
 
-## v2.0.0 clean rebuild
+## v2.1.0 clean rebuild
 
 - Fighter Control is the default screen.
 - Dedicated Radar Screen can be opened in a second tab/window.
@@ -44,3 +44,10 @@ Publish directory: `dist`
 ## v2 design principle
 
 Keep the controller interface simple: select an aircraft, issue the basic instruction, and monitor the result. The radar is a separate operational display rather than another collection of controls.
+
+
+## v2.1.0
+- Realistic widescreen radar visual based on the supplied reference image.
+- Aircraft detail information is kept off the radar display.
+- Radar is intended as the dedicated second-monitor display.
+- Live application overlays remain above the radar background.
