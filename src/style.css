@@ -109,3 +109,10 @@
 .radar-detail-hidden{display:none!important}
 .map,.radar,.mapwrap,.radar-screen{position:relative;isolation:isolate}
 .map > *, .radar > *, .mapwrap > *, .radar-screen > *{position:relative;z-index:2}
+
+/* v2.1.1 radar stability / presentation */
+.mapViewport{position:relative;overflow:hidden}
+.mapCanvas{position:absolute;inset:0;transform-origin:center center}
+.mapCanvas .radar-v2-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}
+.mapCanvas .grid,.mapCanvas .geoMap,.mapCanvas .rings,.mapCanvas .wp,.mapCanvas .airway,.mapCanvas .qra,.mapCanvas .contact{z-index:2}
+.radarLegend{position:absolute;left:14px;bottom:14px;display:flex;flex-direction:column;gap:5px;background:rgba(3,10,17,.82);border:1px solid #365044;padding:10px;font-size:11px;z-index:5}
