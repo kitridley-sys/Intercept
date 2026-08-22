@@ -226,6 +226,10 @@
 .referenceRadarViewport{position:relative!important;overflow:hidden!important;background:#06131f!important;cursor:grab}
 .referenceRadarViewport:active{cursor:grabbing}
 .referenceRadarCanvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;transform-origin:center center!important}
+.referenceCountryMap{z-index:1!important;background:#06131f}
+.referenceCountryMap .country{fill:none!important;stroke:#82a897!important;stroke-width:.23!important;vector-effect:non-scaling-stroke}
+.referenceCountryMap .countryUK{fill:none!important;stroke:#b7d0a8!important;stroke-width:.32!important}
+.referenceRadarCanvas .mapLoading{z-index:1!important;background:#06131f!important;color:#719383!important}
 .referenceRadarImage{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:fill!important;display:block!important;visibility:visible!important;opacity:1!important;z-index:1!important;pointer-events:none!important;user-select:none}
 .referenceRadarCanvas .contact{z-index:20!important}
 .referenceRadarCanvas .liveTrail{z-index:15!important}
@@ -239,8 +243,11 @@
 .contact.friendly .bug{background:#55a9e8}
 .referenceZoomControls{position:absolute;right:14px;top:14px;display:flex;gap:5px;z-index:30}
 .referenceZoomControls button{width:34px;height:34px;background:rgba(4,13,16,.9);border:1px solid #466156;color:#d1e0d8;font-size:17px}
-.referenceLegend{position:absolute;left:14px;bottom:14px;display:flex;gap:14px;background:rgba(3,10,13,.88);border:1px solid #385047;padding:8px 10px;color:#b9cbc2;font-size:10px;z-index:30}
+.radarTools .radarLegend{display:flex;flex-direction:column;gap:7px;margin-top:18px;padding:10px;background:#081713;border:1px solid #36564b;color:#c5d5cd;font-size:10px;line-height:1.25}
+.radarTools .radarLegend h3{margin:0 0 2px;color:#a9bbb3}
+.radarTools .radarLegend span{white-space:nowrap}
 .legendBlue{color:#52a9e8}.legendRed{color:#d55d5d}
+.legendQra{color:#7bb69d}.legendLine{color:#d4deda}
 .referenceQra{position:absolute;color:#7bb69d;font-size:15px;text-shadow:0 0 5px #000;pointer-events:none}
 .liveTrail{position:absolute;width:80px;height:1px;background:rgba(210,80,80,.45);transform-origin:left center;pointer-events:none}
 .headingBug{position:absolute;width:36px;height:2px;background:rgba(255,110,110,.8);transform-origin:0 50%;pointer-events:none}

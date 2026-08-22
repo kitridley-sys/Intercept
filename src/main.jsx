@@ -1,9 +1,8 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
-import radarReference from './assets/radar-reference.png';
 
-const V='2.2.3';
+const V='2.2.4';
 // Typhoon simulation model (gameplay approximations based on public performance data).
 // Internal game units: fuel is % of a notional 4,500 kg internal fuel load.
 // External tanks/AAR are represented separately. Burn varies with speed and manoeuvre.
@@ -68,8 +67,8 @@ function useNaturalEarth(){
 function AccurateCoast(){
  const data=useNaturalEarth();
  const wanted=new Set(['United Kingdom','Ireland','Norway','Denmark','Netherlands','Germany','Belgium','France']);
- if(!data)return <div className="mapLoading"><img className="radar-v2-bg" src="/assets/radar-v2-background.png" alt="" draggable="false" />LOADING 10M COASTLINE DATA…</div>;
- return <svg className="geoMap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="North Sea tactical map">{data.features.filter(f=>wanted.has(f.properties?.ADMIN)).map((f,i)=><path key={i} className={'country '+(f.properties.ADMIN==='United Kingdom'?'countryUK':'')} d={geometryPath(f.geometry)}/>)}</svg>;
+ if(!data)return <div className="mapLoading">LOADING COUNTRY OUTLINES…</div>;
+ return <svg className="geoMap referenceCountryMap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Country outlines around the North Sea">{data.features.filter(f=>wanted.has(f.properties?.ADMIN)).map((f,i)=><path key={i} className={'country '+(f.properties.ADMIN==='United Kingdom'?'countryUK':'')} d={geometryPath(f.geometry)}/>)}</svg>;
 }
 
 const initial={targets:seedTargets,fighters:seedFighters,selected:'U457',selectedF:'TY21',notes:{},score:1250,running:true,elapsed:0,events:['12:24:12Z  UNKNOWN 457 DETECTED','12:22:45Z  TYPHOON 21 SCRAMBLED','12:22:30Z  HOSTILE 178 DETECTED','12:21:05Z  VOYAGER 01 CHECK IN']};
@@ -122,7 +121,7 @@ function RadarMap({state,zoom,setZoom,pan,setPan,layers,setLayers}){
 
     <div className="referenceRadarBody">
       <aside className="radarTools">
-        <h3>RADAR</h3>
+        <h3>MAP VIEW</h3>
         <button onClick={()=>setZoom(z=>clamp(z*1.18,.65,4))}>＋ ZOOM IN</button>
         <button onClick={()=>setZoom(z=>clamp(z*.85,.65,4))}>− ZOOM OUT</button>
         <button onClick={reset}>↺ RESET VIEW</button>
@@ -139,6 +138,14 @@ function RadarMap({state,zoom,setZoom,pan,setPan,layers,setLayers}){
             <i className={layers[key]?'on':''}/> {label}
           </button>
         )}
+
+        <section className="radarLegend" aria-label="Map legend">
+          <h3>LEGEND</h3>
+          <span><b className="legendBlue">■</b> RAF AIRCRAFT</span>
+          <span><b className="legendRed">■</b> UNKNOWN / HOSTILE</span>
+          <span><b className="legendQra">▣</b> QRA BASE</span>
+          <span><b className="legendLine">—</b> HEADING / TRAIL</span>
+        </section>
 
         <div className="radarScale">
           VIEW<br/><b>{zoom.toFixed(1)}×</b>
@@ -157,13 +164,7 @@ function RadarMap({state,zoom,setZoom,pan,setPan,layers,setLayers}){
 
         <div className="referenceRadarCanvas"
           style={{transform:`translate(${pan.x}px,${pan.y}px) scale(${zoom})`}}>
-
-          <img
-            className="referenceRadarImage"
-            src={radarReference}
-            alt="RAF radar display"
-            draggable="false"
-          />
+          <AccurateCoast />
 
           {layers.aircraft && state.targets.map(p=>
             <Contact
@@ -233,18 +234,13 @@ function RadarMap({state,zoom,setZoom,pan,setPan,layers,setLayers}){
           <button onClick={reset}>↺</button>
         </div>
 
-        <div className="referenceLegend">
-          <span><b className="legendBlue">■</b> RAF</span>
-          <span><b className="legendRed">■</b> UNKNOWN / HOSTILE</span>
-          <span><b>▣</b> QRA</span>
-        </div>
       </main>
     </div>
   </div>;
 }
 
 function App(){
- const [state,update]=useSharedState();const view=new URLSearchParams(location.search).get('view')||'control';const [zoom,setZoom]=useState(1),[pan,setPan]=useState({x:0,y:0});const [assist,setAssist]=useState(true);const [layers,setLayers]=useState({aircraft:true,qra:true,waypoints:true,airways:true,rings:true,latlon:true});
+ const [state,update]=useSharedState();const view=new URLSearchParams(location.search).get('view')||'control';const [zoom,setZoom]=useState(1),[pan,setPan]=useState({x:0,y:0});const [assist,setAssist]=useState(true);const [layers,setLayers]=useState({aircraft:false,qra:false,trails:false,headings:false});
  useEffect(()=>{if(view!=='control')return; if(!state.running)return; const id=setInterval(()=>update(st=>({...st,elapsed:st.elapsed+1,targets:st.targets.map(p=>({...p,x:clamp(p.x+Math.sin(p.h*Math.PI/180)*p.s*.00012),y:clamp(p.y-Math.cos(p.h*Math.PI/180)*p.s*.00012)})),fighters:st.fighters.map(p=>p.airborne?{...p,x:clamp(p.x+Math.sin(p.h*Math.PI/180)*p.s*.00012),y:clamp(p.y-Math.cos(p.h*Math.PI/180)*p.s*.00012),fuel:Math.max(0,p.fuel-.015)}:p)})),1000);return()=>clearInterval(id)},[view,state.running,update]);
  const openRadar=()=>window.open(location.pathname+'?view=radar','raf-intercept-radar','noopener,noreferrer');
  if(view==='radar')return <RadarMap state={state} zoom={zoom} setZoom={setZoom} pan={pan} setPan={setPan} assist={assist} layers={layers} setLayers={setLayers} full/>;
