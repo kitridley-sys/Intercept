@@ -2,7 +2,7 @@ import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
 
-const V='2.2.0';
+const V='2.2.1';
 // Typhoon simulation model (gameplay approximations based on public performance data).
 // Internal game units: fuel is % of a notional 4,500 kg internal fuel load.
 // External tanks/AAR are represented separately. Burn varies with speed and manoeuvre.
@@ -128,12 +128,7 @@ function RadarMap({state,zoom,setZoom,pan,setPan,layers,setLayers,full=false}){
     <div className="referenceRadarCanvas"
       style={{transform:`translate(${pan.x}px,${pan.y}px) scale(${zoom})`}}>
 
-      <img
-       className="referenceRadarImage"
-       src="/assets/radar-reference.png"
-       alt="Radar display background"
-       draggable="false"
-      />
+      <div className="referenceRadarImage" aria-hidden="true"/>
 
       {layers.aircraft && state.targets.map(p=>
        <Contact key={p.id} p={p} selected={p.id===state.selected} onClick={()=>{}}/>

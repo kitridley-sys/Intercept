@@ -151,3 +151,34 @@
  .referenceRadarBody{grid-template-columns:1fr}
  .radarTools{position:absolute;z-index:20;left:0;top:0;height:auto;width:150px;opacity:.96}
 }
+
+/* v2.2.1 — force the supplied reference image to be the visible radar base */
+.referenceRadarViewport{
+  position:relative!important;
+  overflow:hidden!important;
+  background:#06131f url('/assets/radar-reference.png') center center / 100% 100% no-repeat!important;
+}
+.referenceRadarCanvas{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  transform-origin:center center!important;
+}
+.referenceRadarImage{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  background:url('/assets/radar-reference.png') center center / 100% 100% no-repeat!important;
+  z-index:0!important;
+  pointer-events:none!important;
+}
+.referenceRadarCanvas > .contact,
+.referenceRadarCanvas > .liveTrail,
+.referenceRadarCanvas > .headingBug,
+.referenceRadarCanvas > .referenceQra{position:absolute}
+.referenceRadarCanvas > .contact{z-index:10!important}
+.referenceRadarCanvas > .liveTrail{z-index:6!important}
+.referenceRadarCanvas > .headingBug{z-index:8!important}
+.referenceRadarCanvas > .referenceQra{z-index:9!important}
