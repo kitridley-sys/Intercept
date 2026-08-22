@@ -1,17 +1,22 @@
-# RAF INTERCEPT v2.2.1
+# RAF INTERCEPT v2.2.2
 
-## Radar display fix
+## Radar image fix
 
-The supplied radar reference image is now loaded as a **direct CSS background** on the radar viewport, with a second background layer inside the zoom/pan canvas. This avoids the previous image rendering issue.
+The approved radar artwork is now bundled directly into the React/Vite application via an import from `src/assets/radar-reference.png`.
 
-The reference image is the sole geographic base. Live RAF/unknown contacts, heading bugs, trails and QRA markers are layered above it.
+This removes the previous `/assets/...` runtime path dependency, which could result in the radar image not appearing after deployment.
 
-The controller interface remains on the separate Fighter Control screen.
+The radar image is the sole base display. Live symbols are overlaid on top:
+- RAF blue squares
+- Unknown/hostile red squares
+- Heading bugs
+- Ghost trails
+- QRA markers
 
-Run:
-`npm install`
-`npm run dev`
+Aircraft detail text is deliberately omitted from the radar display; details remain on Fighter Control.
 
-Netlify:
-Build command `npm run build`
-Publish directory `dist`
+Build:
+`npm run build`
+
+Netlify publish directory:
+`dist`
