@@ -2,7 +2,40 @@ import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
 
-const V='1.2.0';
+const V='2.1.0';
+// Typhoon simulation model (gameplay approximations based on public performance data).
+// Internal game units: fuel is % of a notional 4,500 kg internal fuel load.
+// External tanks/AAR are represented separately. Burn varies with speed and manoeuvre.
+const TYPHOON = {
+  internalFuelKg: 4500,
+  maxSpeedKt: 760,
+  maxAltitudeFt: 55000,
+  cruiseBurnKgMin: 32,
+  combatBurnKgMin: 58,
+  climbRateFtMin: 3200,
+  descentRateFtMin: 5000
+};
+const FUEL_PER_MIN = 100/(TYPHOON.internalFuelKg/TYPHOON.cruiseBurnKgMin);
+const climbMinutes = (fromFt,toFt) => {
+  const delta=Math.max(0,toFt-fromFt);
+  return delta/TYPHOON.climbRateFtMin;
+};
+const scrambleDelayMinutes = () => {
+  // Triangular distribution: 3–5 minutes, mode/mean pulled toward 4.
+  const a=3,b=5,m=4;
+  const u=Math.random();
+  return u < (m-a)/(b-a)
+    ? a+Math.sqrt(u*(b-a)*(m-a))
+    : b-Math.sqrt((1-u)*(b-a)*(b-m));
+};
+
+const normaliseTargetAltitude=(t)=>{
+  if(t.friendly) return t;
+  // Most game targets operate in plausible high-level controlled airspace.
+  const floors=[18000,22000,26000,28000,32000,36000];
+  return {...t,altitude:t.altitude && t.altitude>=18000 ? t.altitude : floors[Math.floor(Math.random()*floors.length)]};
+};
+
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const norm=a=>(a%360+360)%360;
 const bearing=(a,b)=>Math.round(norm(Math.atan2(b.x-a.x,-(b.y-a.y))*180/Math.PI));
@@ -34,7 +67,7 @@ function useNaturalEarth(){
 function AccurateCoast(){
  const data=useNaturalEarth();
  const wanted=new Set(['United Kingdom','Ireland','Norway','Denmark','Netherlands','Germany','Belgium','France']);
- if(!data)return <div className="mapLoading">LOADING 10M COASTLINE DATA…</div>;
+ if(!data)return <div className="mapLoading"><img className="radar-v2-bg" src="/assets/radar-v2-background.png" alt="" draggable="false" />LOADING 10M COASTLINE DATA…</div>;
  return <svg className="geoMap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="North Sea tactical map">{data.features.filter(f=>wanted.has(f.properties?.ADMIN)).map((f,i)=><path key={i} className={'country '+(f.properties.ADMIN==='United Kingdom'?'countryUK':'')} d={geometryPath(f.geometry)}/>)}</svg>;
 }
 
@@ -56,7 +89,42 @@ function RadarMap({state,zoom,setZoom,pan,setPan,assist,layers,setLayers,full=fa
  const onDown=e=>{if(e.button!==0)return;setDrag({sx:e.clientX,sy:e.clientY,px:pan.x,py:pan.y})};
  const onMove=e=>{if(!drag)return;setPan({x:drag.px+e.clientX-drag.sx,y:drag.py+e.clientY-drag.sy})};
  const reset=()=>{setZoom(1);setPan({x:0,y:0})};
- return <div className={'radarPage '+(full?'radarFull':'')}><header><div className="title">RAF INTERCEPT <span>v{V}</span></div><div className="clock">12:24:{String(state.elapsed%60).padStart(2,'0')}Z</div><div className="headstat"><small>DISPLAY</small><b>RADAR PLOT</b></div><div className="headstat"><small>CONTACTS</small><b>{state.targets.length+state.fighters.length}</b></div><button onClick={()=>window.close()}>✕ CLOSE RADAR</button></header><div className="radarBody"><aside className="left"><h3>RADAR TOOLS</h3><button onClick={()=>setZoom(z=>clamp(z*1.18,.75,3.2))}>⌕ ZOOM IN</button><button onClick={()=>setZoom(z=>clamp(z*.84,.75,3.2))}>⌕ ZOOM OUT</button><button onClick={reset}>◉ RESET VIEW</button><button onClick={()=>setPan({x:0,y:0})}>◎ CENTER</button><h3>MAP LAYERS</h3>{Object.entries(layers).map(([k,v])=><button className="layer" key={k} onClick={()=>setLayers(l=>({...l,[k]:!l[k]}))}><i className={v?'on':''}/> {k.toUpperCase()}</button>)}<div className="scale">RANGE SCALE<br/><b>{Math.round(100/zoom)} NM</b><hr/>0 ─── 50 ─── 100 ─── 150</div></aside><main className="mapFrame"><div className="mapViewport" onWheel={onWheel} onMouseDown={onDown} onMouseMove={onMove} onMouseUp={()=>setDrag(null)} onMouseLeave={()=>setDrag(null)}><div className="mapCanvas" style={{transform:`translate(${pan.x}px,${pan.y}px) scale(${zoom})`}}><div className="grid"/><AccurateCoast/><div className="sea">NORTH SEA</div>{layers.rings&&<div className="rings"><i/><i/><i/><i/></div>}{layers.waypoints&&Array.from({length:36}).map((_,i)=><span key={i} className="wp" style={{left:(8+(i*19)%84)+'%',top:(12+(i*31)%74)+'%'}}>•</span>)}{layers.airways&&<><div className="airway a1"/><div className="airway a2"/><div className="airway a3"/></>}{layers.qra&&bases.map(b=><div className="qra" key={b.id} style={{left:b.x+'%',top:b.y+'%'}}>▣<small>{b.name}<br/>QRA</small></div>)}<div className="voyager" style={{left:'63%',top:'62%'}}>✈<small>VOYAGER 01<br/>FL250 430KT<br/>HDG 180°</small></div>{layers.aircraft&&state.targets.map(p=><Contact key={p.id} p={p} selected={p.id===state.selected} onClick={()=>{}}/>)}{layers.aircraft&&state.fighters.map(p=><Contact key={p.id} p={{...p,cls:'FRIENDLY'}} friendly selected={p.id===state.selectedF} onClick={()=>{}}/>)}{assist&&<div className="interceptLine" style={{left:f.x+'%',top:f.y+'%',width:intercept.range/12+'%',transform:`rotate(${intercept.h}deg)`}}/>}</div><div className="zoomCtl"><button onClick={()=>setZoom(z=>clamp(z*1.2,.75,3.2))}>+</button><button onClick={()=>setZoom(z=>clamp(z*.83,.75,3.2))}>−</button><button onClick={reset}>↺</button><div>{zoom.toFixed(1)}×</div></div><div className="north">N<br/><span>↑</span></div></div></main></div></div>;
+ return <div className={'radarPage '+(full?'radarFull':'')}><header><div className="title">RAF INTERCEPT <span>v{V}</span></div><div className="clock">12:24:{String(state.elapsed%60).padStart(2,'0')}Z</div><div className="headstat"><small>DISPLAY</small><b>RADAR PLOT</b></div><div className="headstat"><small>CONTACTS</small><b>{state.targets.length+state.fighters.length}</b></div><button onClick={()=>window.close()}>✕ CLOSE RADAR</button></header><div className="radarBody"><aside className="left"><h3>RADAR TOOLS</h3><button onClick={()=>setZoom(z=>clamp(z*1.18,.75,3.2))}>⌕ ZOOM IN</button><button onClick={()=>setZoom(z=>clamp(z*.84,.75,3.2))}>⌕ ZOOM OUT</button><button onClick={reset}>◉ RESET VIEW</button><button onClick={()=>setPan({x:0,y:0})}>◎ CENTER</button><h3>MAP LAYERS</h3>{Object.entries(layers).map(([k,v])=><button className="layer" key={k} onClick={()=>setLayers(l=>({...l,[k]:!l[k]}))}><i className={v?'on':''}/> {k.toUpperCase()}</button>)}<div className="scale">RANGE SCALE<br/><b>{Math.round(100/zoom)} NM</b><hr/>0 ─── 50 ─── 100 ─── 150</div></aside><main className="mapFrame"><div className="mapViewport" onWheel={onWheel} onMouseDown={onDown} onMouseMove={onMove} onMouseUp={()=>setDrag(null)} onMouseLeave={()=>setDrag(null)}><div className="mapCanvas" style={{transform:`translate(${pan.x}px,${pan.y}px) scale(${zoom})`}}><div className="grid"/><AccurateCoast/><div className="sea">NORTH SEA</div>{layers.rings&&<div className="rings"><i/><i/><i/><i/></div>}{layers.waypoints&&Array.from({length:36}).map((_,i)=><span key={i} className="wp" style={{left:(8+(i*19)%84)+'%',top:(12+(i*31)%74)+'%'}}>•</span>)}{layers.airways&&<><div className="airway a1"/><div className="airway a2"/><div className="airway a3"/></>}{layers.qra&&bases.map(b=><div className="qra" key={b.id} style={{left:b.x+'%',top:b.y+'%'}}>▣<small>{b.name}<br/>QRA</small></div>)}<div className="voyager" style={{left:'63%',top:'62%'}}>✈<small>{voyager.airborne?`FL250 430KT`:`ON GROUND — BRIZE NORTON`}<br/>{voyager.airborne?`HDG ${String(voyager.heading).padStart(3,'0')}°`:`SCRAMBLE REQUIRED`}</small></div>{layers.aircraft&&state.targets.map(p=><Contact key={p.id} p={p} selected={p.id===state.selected} onClick={()=>{}}/>)}{layers.aircraft&&state.fighters.map(p=><Contact key={p.id} p={{...p,cls:'FRIENDLY'}} friendly selected={p.id===state.selectedF} onClick={()=>{}}/>)}{assist&&<div className="interceptLine" style={{left:f.x+'%',top:f.y+'%',width:intercept.range/12+'%',transform:`rotate(${intercept.h}deg)`}}/>}</div><div className="zoomCtl"><button onClick={()=>setZoom(z=>clamp(z*1.2,.75,3.2))}>+</button><button onClick={()=>setZoom(z=>clamp(z*.83,.75,3.2))}>−</button><button onClick={reset}>↺</button><div>{zoom.toFixed(1)}×</div></div><div className="north">N<br/><span>↑</span></div></div>
+
+<div className="quick-select">
+  <div className="quick-title">QUICK AIRCRAFT SELECT</div>
+  <div className="quick-buttons">
+    {fighters.map(f=><button key={f.id} className={fighter?.id===f.id?'selected':''} onClick={()=>selectAircraft(f.id)}>
+      <b>{f.name}</b><span>{f.racetrack?'RACETRACK':f.airborne?'AIRBORNE':'ON GROUND'}</span>
+    </button>)}
+    <button className={voyager.airborne?'':'disabled'} onClick={()=>setMessage(voyager.airborne?'VOYAGER 01 SELECTED':'VOYAGER ON GROUND')}>
+      <b>VOYAGER 01</b><span>{voyager.racetrack?'RACETRACK':voyager.airborne?'AIRBORNE':'ON GROUND'}</span>
+    </button>
+  </div>
+</div>
+
+<div className="flight-command-panel">
+  <h3>{fighter?.name || 'AIRCRAFT'} INSTRUCTIONS</h3>
+  <div className="simple-command-row">
+    <label>HDG <input id="cmd-hdg" type="number" min="0" max="359" defaultValue={fighter?.heading||0}/></label>
+    <label>SPD <input id="cmd-spd" type="number" min="180" max="760" defaultValue={fighter?.speed||420}/></label>
+    <label>ALT <input id="cmd-alt" type="number" min="1000" max="55000" step="1000" defaultValue={fighter?.targetAltitude||fighter?.altitude||24000}/></label>
+    <button className="primary" onClick={()=>issueInstructions(
+      document.getElementById('cmd-hdg').value,
+      document.getElementById('cmd-spd').value,
+      document.getElementById('cmd-alt').value
+    )}>SEND</button>
+  </div>
+  <div className="pattern-row">
+    <button onClick={()=>setRacetrack(fighter?.id)}>5 MIN RACETRACK</button>
+    <button onClick={requestBackup}>REQUEST BACK-UP</button>
+  </div>
+  <div className="readiness">
+    BACK-UP: {backupReadyAt!==null ? `PREPARING — ${Math.max(0,Math.ceil(backupReadyAt-simMinutes))} MIN` : backupRequested ? 'CREWING' : 'READY'}
+  </div>
+</div>
+
+</main></div></div>;
 }
 function ControlPage({state,update,onRadar}){
  const [note,setNote]=useState('');const [assist,setAssist]=useState(true);const [layers,setLayers]=useState({aircraft:true,qra:true,waypoints:true,airways:true,rings:true,latlon:true});
@@ -78,3 +146,20 @@ function App(){
 }
 
 createRoot(document.getElementById('root')).render(<App/>);
+const selectAircraft=(id)=>{
+  const f=fighters.find(x=>x.id===id);
+  if(f){setFighter(f);setMessage(`${f.name} SELECTED — READY FOR INSTRUCTIONS`);}
+};
+const setRacetrack=(id)=>{
+  if(id==='VOYAGER'){
+    if(!voyager.airborne){setMessage('VOYAGER MUST BE AIRBORNE BEFORE RACETRACK.');return}
+    setVoyager(v=>({...v,racetrack:true,racetrackPeriod:5}));
+    log('VOYAGER — 5 MINUTE RACETRACK PATTERN ORDER');
+    setMessage('VOYAGER: PROCEED TO 5 MINUTE RACETRACK PATTERN.');
+    return;
+  }
+  setFighters(a=>a.map(x=>x.id===id?{...x,racetrack:true,racetrackPeriod:5}:x));
+  log(`${id} — 5 MINUTE RACETRACK PATTERN ORDER`);
+  setMessage(`${id}: PROCEED TO 5 MINUTE RACETRACK PATTERN.`);
+};
+

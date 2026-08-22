@@ -29,7 +29,7 @@
   clip-path:polygon(30% 0,52% 5%,70% 14%,82% 27%,76% 38%,88% 49%,79% 60%,85% 71%,68% 82%,57% 94%,39% 100%,24% 92%,14% 79%,7% 66%,12% 52%,4% 39%,14% 25%,10% 12%);
   display:flex;align-items:center;justify-content:center;text-align:center;font-size:14px;
 }
-/* v1.1 two-screen controller layout */
+/* v2.0.0 two-screen controller layout */
 .controlOnly{grid-template-rows:54px 1fr;background:#020807}
 .controlOnly header{gap:18px}
 .openRadar{margin-left:auto!important;background:#07311a;border-color:#4b9b61;color:#b9e8b6;font-weight:700}
@@ -49,7 +49,7 @@
 @media(max-width:1050px){.controlBody{grid-template-columns:220px minmax(0,1fr) 230px}.voyGrid{grid-template-columns:1fr 1fr}.voyGrid button{grid-column:1/3}.fighterName{font-size:22px}.nato{font-size:11px}}
 @media(max-width:760px){.controlOnly{grid-template-rows:50px 1fr}.controlBody{display:block;overflow:auto}.controlLeft,.controlRight{display:block;border:0;padding:8px}.controlMain{padding:8px}.controlLeft section:first-child{display:block}.fighterHeader{display:block}.fuelLarge{width:100%;margin-top:12px}.commandGrid{grid-template-columns:1fr}.commandGrid .hostile{grid-column:auto}.voyGrid{grid-template-columns:1fr}.voyGrid button{grid-column:auto}.openRadar{font-size:9px;padding:0 7px!important}.headstat{display:none}.title{font-size:14px}.clock{font-size:11px}}
 
-/* v1.2 — Natural Earth 10m geographic base */
+/* v2.0.0 — Natural Earth 10m geographic base */
 .mapFrame{position:relative;overflow:hidden}
 .geoMap{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 .country{fill:#102018;fill-opacity:.92;stroke:#6c8757;stroke-width:.16;vector-effect:non-scaling-stroke}
@@ -57,3 +57,55 @@
 .mapLoading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6c9472;font-size:10px;z-index:2;background:#020807}
 .mapCanvas{isolation:isolate}
 .mapCanvas .grid{z-index:2}.mapCanvas .sea{z-index:3}.mapCanvas .contact,.mapCanvas .qra,.mapCanvas .voyager,.mapCanvas .rings,.mapCanvas .interceptLine,.mapCanvas .wp,.mapCanvas .airway{z-index:6}
+
+/* v2.0.0 tactical map proportions and base presentation */
+.mapwrap{padding-top:2px;padding-bottom:2px}
+.map{transform:scaleY(1.15);transform-origin:center center;margin-top:-7.5%;margin-bottom:-7.5%;height:115%}
+.tanker.grounded{opacity:.8}
+.tanker.airborne{opacity:1}
+.mapbase{font-size:19px}
+.mapbase small{font-size:9px}
+
+/* v2.0.0 fighter instruction controls */
+.flight-command-panel{margin-top:10px;border:1px solid #31573b;background:#08130c;padding:12px}
+.flight-command-panel h3{margin:0 0 10px;font-size:14px;letter-spacing:.08em}
+.cmd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cmd-grid label{font-size:11px;color:#91a78f}
+.cmd-grid input{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;background:#030905;color:#d7ead5;border:1px solid #426247;font-size:16px}
+.flight-command-panel button{margin-top:9px;width:100%;padding:11px;font-size:13px}
+.flight-command-panel .primary{font-weight:800}
+.readiness{margin-top:8px;font-size:11px;color:#7ea486}
+
+/* v2.0.0 simple aircraft selection and command strip */
+.quick-select{border:1px solid #31573b;background:#07110a;padding:10px;margin-bottom:8px}
+.quick-title{font-size:12px;font-weight:800;letter-spacing:.08em;margin-bottom:7px;color:#a9c0a8}
+.quick-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:6px}
+.quick-buttons button{padding:9px 8px;text-align:left;background:#0a170d;border:1px solid #35543a;color:#cfe0ce;cursor:pointer}
+.quick-buttons button.selected{border:2px solid #39a9ff;background:#0b2030}
+.quick-buttons button span{display:block;font-size:10px;margin-top:3px;opacity:.75}
+.quick-buttons button.disabled{opacity:.55}
+.simple-command-row{display:grid;grid-template-columns:1fr 1fr 1.25fr 90px;gap:7px;align-items:end}
+.simple-command-row label{font-size:11px;color:#91a78f}
+.simple-command-row input{display:block;width:100%;box-sizing:border-box;margin-top:3px;padding:9px;background:#030905;color:#d7ead5;border:1px solid #426247;font-size:16px}
+.simple-command-row button,.pattern-row button{padding:10px 8px;font-size:12px}
+.pattern-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
+@media(max-width:800px){
+  .simple-command-row{grid-template-columns:1fr 1fr}
+  .simple-command-row button{grid-column:span 2}
+}
+
+/* RAF INTERCEPT v2.1 — realistic radar underlay */
+.radar-v2-bg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  pointer-events:none;
+  user-select:none;
+  z-index:0;
+}
+.radar-detail-hidden{display:none!important}
+.map,.radar,.mapwrap,.radar-screen{position:relative;isolation:isolate}
+.map > *, .radar > *, .mapwrap > *, .radar-screen > *{position:relative;z-index:2}
