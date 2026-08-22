@@ -182,3 +182,34 @@
 .referenceRadarCanvas > .liveTrail{z-index:6!important}
 .referenceRadarCanvas > .headingBug{z-index:8!important}
 .referenceRadarCanvas > .referenceQra{z-index:9!important}
+
+/* v2.2.2 — bundled radar artwork: no runtime URL required */
+.referenceRadarViewport{
+  position:relative!important;
+  overflow:hidden!important;
+  background:#06131f!important;
+}
+.referenceRadarCanvas{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  transform-origin:center center!important;
+}
+.referenceRadarImage{
+  position:absolute!important;
+  left:0!important;
+  top:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:fill!important;
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  z-index:1!important;
+  pointer-events:none!important;
+}
+.referenceRadarCanvas .contact{z-index:20!important}
+.referenceRadarCanvas .liveTrail{z-index:15!important}
+.referenceRadarCanvas .headingBug{z-index:16!important}
+.referenceRadarCanvas .referenceQra{z-index:17!important}
