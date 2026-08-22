@@ -1,22 +1,21 @@
-# RAF INTERCEPT v2.2.2
+# RAF INTERCEPT v2.2.3
 
-## Radar image fix
+## Radar display repaired
 
-The approved radar artwork is now bundled directly into the React/Vite application via an import from `src/assets/radar-reference.png`.
+v2.2.2 accidentally removed the `RadarMap` component, which caused the radar URL to render a blank page. v2.2.3 restores the component.
 
-This removes the previous `/assets/...` runtime path dependency, which could result in the radar image not appearing after deployment.
+The supplied radar artwork is bundled at `src/assets/radar-reference.png` and imported directly by React/Vite.
 
-The radar image is the sole base display. Live symbols are overlaid on top:
-- RAF blue squares
-- Unknown/hostile red squares
+The radar display includes:
+- Supplied UK/North Sea radar artwork as the base
+- RAF blue-square live contacts
+- Unknown/hostile red-square live contacts
 - Heading bugs
 - Ghost trails
 - QRA markers
+- Zoom and pan
+- Separate fighter-control screen
 
-Aircraft detail text is deliberately omitted from the radar display; details remain on Fighter Control.
-
-Build:
-`npm run build`
-
-Netlify publish directory:
-`dist`
+Netlify:
+Build command: `npm run build`
+Publish directory: `dist`
