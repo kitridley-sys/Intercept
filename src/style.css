@@ -213,3 +213,39 @@
 .referenceRadarCanvas .liveTrail{z-index:15!important}
 .referenceRadarCanvas .headingBug{z-index:16!important}
 .referenceRadarCanvas .referenceQra{z-index:17!important}
+
+/* v2.2.3 — radar component restored; live contacts use simple tactical squares */
+.referenceRadarPage{background:#02070b}
+.referenceRadarBody{display:grid;grid-template-columns:175px 1fr;height:calc(100vh - 58px);min-height:500px}
+.radarTools{padding:10px;background:#061017;border-right:1px solid #29423a;overflow:auto}
+.radarTools h3{font-size:11px;letter-spacing:.12em;color:#a9bbb3;margin:5px 0 8px}
+.radarTools button{display:block;width:100%;margin:5px 0;padding:8px;background:#091a17;border:1px solid #36564b;color:#c8d9d0;text-align:left;font-size:10px}
+.radarTools .layer i{display:inline-block;width:7px;height:7px;border:1px solid #60786d;margin-right:5px}
+.radarTools .layer i.on{background:#8dc0a3}
+.radarScale{margin-top:18px;font-size:9px;color:#81998e;line-height:1.6}
+.referenceRadarViewport{position:relative!important;overflow:hidden!important;background:#06131f!important;cursor:grab}
+.referenceRadarViewport:active{cursor:grabbing}
+.referenceRadarCanvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;transform-origin:center center!important}
+.referenceRadarImage{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:fill!important;display:block!important;visibility:visible!important;opacity:1!important;z-index:1!important;pointer-events:none!important;user-select:none}
+.referenceRadarCanvas .contact{z-index:20!important}
+.referenceRadarCanvas .liveTrail{z-index:15!important}
+.referenceRadarCanvas .headingBug{z-index:16!important}
+.referenceRadarCanvas .referenceQra{z-index:17!important}
+.contact{position:absolute}
+.contact .sym{display:block;width:11px;height:11px;border:2px solid #d95b5b;background:rgba(60,0,0,.35);box-sizing:border-box}
+.contact.friendly .sym{border-color:#55a9e8;background:rgba(0,55,90,.35)}
+.contact.selected .sym{box-shadow:0 0 0 2px rgba(255,255,255,.8),0 0 8px rgba(255,255,255,.55)}
+.contact .bug{position:absolute;left:5px;top:-18px;width:1px;height:18px;background:#d95b5b;transform-origin:bottom center}
+.contact.friendly .bug{background:#55a9e8}
+.referenceZoomControls{position:absolute;right:14px;top:14px;display:flex;gap:5px;z-index:30}
+.referenceZoomControls button{width:34px;height:34px;background:rgba(4,13,16,.9);border:1px solid #466156;color:#d1e0d8;font-size:17px}
+.referenceLegend{position:absolute;left:14px;bottom:14px;display:flex;gap:14px;background:rgba(3,10,13,.88);border:1px solid #385047;padding:8px 10px;color:#b9cbc2;font-size:10px;z-index:30}
+.legendBlue{color:#52a9e8}.legendRed{color:#d55d5d}
+.referenceQra{position:absolute;color:#7bb69d;font-size:15px;text-shadow:0 0 5px #000;pointer-events:none}
+.liveTrail{position:absolute;width:80px;height:1px;background:rgba(210,80,80,.45);transform-origin:left center;pointer-events:none}
+.headingBug{position:absolute;width:36px;height:2px;background:rgba(255,110,110,.8);transform-origin:0 50%;pointer-events:none}
+.friendlyBug{background:rgba(80,180,255,.9)}
+@media(max-width:800px){
+ .referenceRadarBody{grid-template-columns:1fr}
+ .radarTools{position:absolute;z-index:40;left:0;top:0;width:145px;opacity:.96}
+}

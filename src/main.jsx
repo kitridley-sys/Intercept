@@ -3,7 +3,7 @@ import {createRoot} from 'react-dom/client';
 import './style.css';
 import radarReference from './assets/radar-reference.png';
 
-const V='2.2.2';
+const V='2.2.3';
 // Typhoon simulation model (gameplay approximations based on public performance data).
 // Internal game units: fuel is % of a notional 4,500 kg internal fuel load.
 // External tanks/AAR are represented separately. Burn varies with speed and manoeuvre.
@@ -93,6 +93,156 @@ function ControlPage({state,update,onRadar}){
  const noteSave=()=>{if(!note.trim())return;update(st=>({...st,notes:{...st.notes,[t.id]:[...(st.notes[t.id]||[]),{time:new Date().toISOString().slice(11,19)+'Z',text:note.trim()}]},events:[`${new Date().toISOString().slice(11,19)}Z  NOTE ADDED TO ${t.name}`,...st.events].slice(0,8)}));setNote('')};
  return <div className="app controlOnly"><header><div className="title">RAF INTERCEPT <span>v{V}</span></div><div className="clock">12:24:{String(state.elapsed%60).padStart(2,'0')}Z</div><div className="headstat"><small>ROLE</small><b>FIGHTER CONTROL</b></div><div className="headstat"><small>SCORE</small><b>{state.score.toLocaleString()}</b></div><div className="headstat"><small>RANK</small><b>CONTROLLER</b></div><button onClick={()=>update(st=>({...st,running:!st.running}))}>{state.running?'Ⅱ PAUSE':'▶ RESUME'}</button><button className="openRadar" onClick={onRadar}>▣ OPEN RADAR SCREEN</button></header><div className="controlBody"><aside className="controlLeft"><section><h2>TACTICAL SITUATION</h2><div className="bigContact">{t.cls==='HOSTILE'?'HOSTILE':'UNKNOWN'} {t.id}</div><p>RANGE <b>{distance(f,t).toFixed(0)} NM</b></p><p>BEARING <b>{String(bearing(f,t)).padStart(3,'0')}°</b></p><p>ALTITUDE <b>FL{t.alt}</b></p><p>SPEED <b>{t.s} KT</b></p><p>HEADING <b>{String(t.h).padStart(3,'0')}°</b></p><p>SOURCE <b>{t.source}</b></p></section><section><h2>CONTACTS</h2>{state.targets.map(x=><button className={'contactRow '+(x.id===t.id?'selectedRow':'')} key={x.id} onClick={()=>update(st=>({...st,selected:x.id}))}><span className={x.cls==='CIVIL'?'blueDot':'redDot'}/><b>{x.name}</b><small>FL{x.alt} {x.s}KT</small></button>)}</section></aside><main className="controlMain"><section className="fighterDeck"><h2>SELECTED FIGHTER</h2><div className="fighterHeader"><div><div className="fighterName">{f.name}</div><div className="sub">{base.name} QRA · {f.airborne?'AIRBORNE':'READY'}</div></div><div className="fuelLarge"><span style={{width:f.fuel+'%'}}/><b>{f.fuel.toFixed(1)}% FUEL</b></div></div><div className="commandGrid"><button className="primary" onClick={scramble}>SCRAMBLE {f.name}</button><button className="primary" onClick={vector}>SEND INTERCEPT VECTOR <strong>{String(intercept.h).padStart(3,'0')}°</strong></button><button className="aar" onClick={()=>addEvent('AAR REQUESTED — VOYAGER 01')}>REQUEST VOYAGER AAR</button><button className="rtb" onClick={rtb}>RTB {base.name}</button><button className="hostile" onClick={()=>update(st=>({...st,targets:st.targets.map(x=>x.id===t.id?{...x,cls:'HOSTILE'}:x),events:[`${new Date().toISOString().slice(11,19)}Z  ${t.name} DECLARED HOSTILE`,...st.events].slice(0,8)}))}>DECLARE HOSTILE</button></div><div className="vectorPanel"><h3>INSTRUCTIONS</h3><div className="instruction"><span>HEADING</span><strong>{String(intercept.h).padStart(3,'0')}°</strong></div><div className="instruction"><span>RANGE</span><strong>{intercept.range.toFixed(0)} NM</strong></div><div className="instruction"><span>ALTITUDE</span><strong>FL{f.alt}</strong></div><div className="instruction"><span>SPEED</span><strong>{f.s} KT</strong></div><div className="nato">“TY21, TURN RIGHT HEADING {String(intercept.h).padStart(3,'0')}. VECTOR FOR INTERCEPT. REPORT VISUAL.”</div></div></section><section className="voyagerDeck"><h2>VOYAGER AAR</h2><div className="voyGrid"><div><b>VOYAGER 01</b><span>FL250 · 430 KT · HDG 180°</span></div><div><b>POSITION</b><span>560N 020E</span></div><div><b>STATUS</b><span className="green">ON STATION</span></div><button onClick={()=>addEvent('VOYAGER 01 CHECK IN')}>CHECK IN</button></div></section><section className="notesDeck"><h2>CONTACT NOTES — {t.name}</h2><div className="notesList">{(state.notes[t.id]||[]).map((n,i)=><div key={i}><small>{n.time}</small> {n.text}</div>)}{!(state.notes[t.id]||[]).length&&<div className="muted">No notes recorded.</div>}</div><div className="noteInput"><input value={note} onChange={e=>setNote(e.target.value)} placeholder="Enter controller note for selected contact..." onKeyDown={e=>e.key==='Enter'&&noteSave()}/><button onClick={noteSave}>ADD NOTE</button></div></section></main><aside className="controlRight"><section><h2>QRA STATUS</h2>{bases.map(b=>{const x=state.fighters.find(z=>z.base===b.id);return <button className="qraRow" key={b.id} onClick={()=>update(st=>({...st,selectedF:x?.id||st.selectedF}))}><b>{b.name}</b><span>{x?.name}</span><em className={x?.airborne?'green':''}>{x?.airborne?'AIRBORNE':'READY'}</em></button>})}</section><section><h2>EVENT LOG</h2>{state.events.map((e,i)=><div className="event" key={i}>{e}</div>)}</section><section><h2>TRAINING ASSISTANCE</h2><button className="assist" onClick={()=>setAssist(!assist)}>STANDARD ASSIST: {assist?'ON':'OFF'}</button><p className="muted">Assistance {assist?'provides predicted intercept vectors and suggested commands.':'is disabled; calculate and issue instructions manually.'}</p></section></aside></div></div>
 }
+
+function RadarMap({state,zoom,setZoom,pan,setPan,layers,setLayers}){
+  const [drag,setDrag]=useState(null);
+  const reset=()=>{setZoom(1);setPan({x:0,y:0})};
+  const wheel=e=>{
+    e.preventDefault();
+    setZoom(z=>clamp(z*(e.deltaY<0?1.12:.89),.65,4));
+  };
+  const down=e=>{
+    if(e.button!==0)return;
+    setDrag({x:e.clientX,y:e.clientY,px:pan.x,py:pan.y});
+  };
+  const move=e=>{
+    if(!drag)return;
+    setPan({x:drag.px+e.clientX-drag.x,y:drag.py+e.clientY-drag.y});
+  };
+  const up=()=>setDrag(null);
+
+  return <div className="radarPage radarReferencePage">
+    <header>
+      <div className="title">RAF INTERCEPT <span>v{V}</span></div>
+      <div className="clock">TACTICAL RADAR DISPLAY</div>
+      <div className="headstat"><small>CONTACTS</small><b>{state.targets.length+state.fighters.length}</b></div>
+      <div className="headstat"><small>SCORE</small><b>{state.score.toLocaleString()}</b></div>
+      <button onClick={()=>window.close()}>✕ CLOSE RADAR</button>
+    </header>
+
+    <div className="referenceRadarBody">
+      <aside className="radarTools">
+        <h3>RADAR</h3>
+        <button onClick={()=>setZoom(z=>clamp(z*1.18,.65,4))}>＋ ZOOM IN</button>
+        <button onClick={()=>setZoom(z=>clamp(z*.85,.65,4))}>− ZOOM OUT</button>
+        <button onClick={reset}>↺ RESET VIEW</button>
+
+        <h3>OVERLAYS</h3>
+        {[
+          ['aircraft','AIRCRAFT'],
+          ['trails','GHOST TRAILS'],
+          ['headings','HEADING BUGS'],
+          ['qra','QRA BASES']
+        ].map(([key,label])=>
+          <button className="layer" key={key}
+            onClick={()=>setLayers(l=>({...l,[key]:!l[key]}))}>
+            <i className={layers[key]?'on':''}/> {label}
+          </button>
+        )}
+
+        <div className="radarScale">
+          VIEW<br/><b>{zoom.toFixed(1)}×</b>
+          <hr/>
+          DRAG TO PAN<br/>
+          WHEEL TO ZOOM
+        </div>
+      </aside>
+
+      <main className="referenceRadarViewport"
+        onWheel={wheel}
+        onMouseDown={down}
+        onMouseMove={move}
+        onMouseUp={up}
+        onMouseLeave={up}>
+
+        <div className="referenceRadarCanvas"
+          style={{transform:`translate(${pan.x}px,${pan.y}px) scale(${zoom})`}}>
+
+          <img
+            className="referenceRadarImage"
+            src={radarReference}
+            alt="RAF radar display"
+            draggable="false"
+          />
+
+          {layers.aircraft && state.targets.map(p=>
+            <Contact
+              key={p.id}
+              p={p}
+              compact
+              selected={p.id===state.selected}
+              onClick={()=>{}}
+            />
+          )}
+
+          {layers.aircraft && state.fighters.map(p=>
+            <Contact
+              key={p.id}
+              p={{...p,cls:'FRIENDLY'}}
+              friendly
+              compact
+              selected={p.id===state.selectedF}
+              onClick={()=>{}}
+            />
+          )}
+
+          {layers.trails && state.targets.map(p=>
+            <div key={'trail-'+p.id}
+              className="liveTrail"
+              style={{
+                left:p.x+'%',
+                top:p.y+'%',
+                transform:`rotate(${p.h||0}deg)`
+              }}
+            />
+          )}
+
+          {layers.headings && state.targets.map(p=>
+            <div key={'heading-'+p.id}
+              className="headingBug"
+              style={{
+                left:p.x+'%',
+                top:p.y+'%',
+                transform:`rotate(${p.h||0}deg)`
+              }}
+            />
+          )}
+
+          {layers.headings && state.fighters.map(p=>
+            <div key={'fheading-'+p.id}
+              className="headingBug friendlyBug"
+              style={{
+                left:p.x+'%',
+                top:p.y+'%',
+                transform:`rotate(${p.h||0}deg)`
+              }}
+            />
+          )}
+
+          {layers.qra && bases.map(b=>
+            <div key={b.id}
+              className="referenceQra"
+              style={{left:b.x+'%',top:b.y+'%'}}
+            >▣</div>
+          )}
+        </div>
+
+        <div className="referenceZoomControls">
+          <button onClick={()=>setZoom(z=>clamp(z*1.2,.65,4))}>+</button>
+          <button onClick={()=>setZoom(z=>clamp(z*.83,.65,4))}>−</button>
+          <button onClick={reset}>↺</button>
+        </div>
+
+        <div className="referenceLegend">
+          <span><b className="legendBlue">■</b> RAF</span>
+          <span><b className="legendRed">■</b> UNKNOWN / HOSTILE</span>
+          <span><b>▣</b> QRA</span>
+        </div>
+      </main>
+    </div>
+  </div>;
+}
+
 function App(){
  const [state,update]=useSharedState();const view=new URLSearchParams(location.search).get('view')||'control';const [zoom,setZoom]=useState(1),[pan,setPan]=useState({x:0,y:0});const [assist,setAssist]=useState(true);const [layers,setLayers]=useState({aircraft:true,qra:true,waypoints:true,airways:true,rings:true,latlon:true});
  useEffect(()=>{if(view!=='control')return; if(!state.running)return; const id=setInterval(()=>update(st=>({...st,elapsed:st.elapsed+1,targets:st.targets.map(p=>({...p,x:clamp(p.x+Math.sin(p.h*Math.PI/180)*p.s*.00012),y:clamp(p.y-Math.cos(p.h*Math.PI/180)*p.s*.00012)})),fighters:st.fighters.map(p=>p.airborne?{...p,x:clamp(p.x+Math.sin(p.h*Math.PI/180)*p.s*.00012),y:clamp(p.y-Math.cos(p.h*Math.PI/180)*p.s*.00012),fuel:Math.max(0,p.fuel-.015)}:p)})),1000);return()=>clearInterval(id)},[view,state.running,update]);
