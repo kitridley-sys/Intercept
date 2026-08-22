@@ -116,3 +116,38 @@
 .mapCanvas .radar-v2-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}
 .mapCanvas .grid,.mapCanvas .geoMap,.mapCanvas .rings,.mapCanvas .wp,.mapCanvas .airway,.mapCanvas .qra,.mapCanvas .contact{z-index:2}
 .radarLegend{position:absolute;left:14px;bottom:14px;display:flex;flex-direction:column;gap:5px;background:rgba(3,10,17,.82);border:1px solid #365044;padding:10px;font-size:11px;z-index:5}
+
+/* =========================================================
+   RAF INTERCEPT v2.2 — REFERENCE RADAR
+   The supplied radar image is the sole geographic base layer.
+   Live contacts/overlays are rendered above it.
+   ========================================================= */
+.radarReferencePage{background:#020507}
+.referenceRadarBody{display:grid;grid-template-columns:180px 1fr;height:calc(100vh - 58px);min-height:500px}
+.radarTools{padding:12px;background:#061016;border-right:1px solid #29423a;overflow:auto}
+.radarTools h3{font-size:12px;letter-spacing:.12em;color:#9fb6aa;margin:5px 0 8px}
+.radarTools button{display:block;width:100%;margin:5px 0;padding:9px;background:#091a17;border:1px solid #36564b;color:#c8d9d0;text-align:left;font-size:11px}
+.radarTools button:hover{background:#102821}
+.radarTools .layer{font-size:10px}
+.radarTools .layer i{display:inline-block;width:7px;height:7px;border:1px solid #60786d;margin-right:5px}
+.radarTools .layer i.on{background:#8dc0a3}
+.radarScale{margin-top:18px;font-size:9px;color:#81998e;line-height:1.6}
+.referenceRadarViewport{position:relative;overflow:hidden;background:#000;cursor:grab}
+.referenceRadarViewport:active{cursor:grabbing}
+.referenceRadarCanvas{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:center center}
+.referenceRadarImage{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;user-select:none;z-index:1}
+.referenceRadarCanvas .contact{z-index:5}
+.liveTrail{position:absolute;width:100px;height:1px;background:rgba(100,220,170,.22);transform-origin:left center;z-index:3;pointer-events:none}
+.headingBug{position:absolute;width:42px;height:2px;background:rgba(255,255,255,.75);transform-origin:2px 50%;z-index:6;pointer-events:none}
+.friendlyBug{background:rgba(80,180,255,.9)}
+.referenceQra{position:absolute;color:#75a58e;font-size:16px;z-index:5;pointer-events:none;text-shadow:0 0 5px #000}
+.referenceZoomControls{position:absolute;right:14px;top:14px;display:flex;gap:5px;z-index:10}
+.referenceZoomControls button{width:34px;height:34px;background:rgba(4,13,16,.88);border:1px solid #466156;color:#d1e0d8;font-size:17px}
+.referenceNorth{position:absolute;right:17px;bottom:70px;text-align:center;color:#c4d5cc;font-size:11px;z-index:10;text-shadow:0 1px 3px #000}
+.referenceNorth span{font-size:20px}
+.referenceLegend{position:absolute;left:14px;bottom:14px;display:flex;gap:14px;background:rgba(3,10,13,.84);border:1px solid #385047;padding:8px 10px;color:#b9cbc2;font-size:10px;z-index:10}
+.legendBlue{color:#52a9e8}.legendRed{color:#d55d5d}
+@media(max-width:800px){
+ .referenceRadarBody{grid-template-columns:1fr}
+ .radarTools{position:absolute;z-index:20;left:0;top:0;height:auto;width:150px;opacity:.96}
+}

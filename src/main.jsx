@@ -2,7 +2,7 @@ import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
 
-const V='2.1.0';
+const V='2.2.0';
 // Typhoon simulation model (gameplay approximations based on public performance data).
 // Internal game units: fuel is % of a notional 4,500 kg internal fuel load.
 // External tanks/AAR are represented separately. Burn varies with speed and manoeuvre.
@@ -83,47 +83,98 @@ function useSharedState(){
 function Contact({p,friendly=false,selected,onClick}){return <button className={'contact '+(friendly?'friendly ':'')+(p.cls==='HOSTILE'?'hostile ':'')+(selected?'selected':'')} style={{left:p.x+'%',top:p.y+'%'}} onClick={e=>{e.stopPropagation();onClick()}}><span className="bug" style={{transform:`rotate(${p.h}deg)`}}/><span className="sym" aria-label={friendly?'RAF aircraft':p.cls==='HOSTILE'?'Hostile aircraft':'Unknown aircraft'}/><span className="lbl">{p.name}<br/>FL{p.alt} {p.s}KT<br/>HDG {String(p.h).padStart(3,'0')}°</span></button>}
 function RadarMap({state,zoom,setZoom,pan,setPan,layers,setLayers,full=false}){
  const [drag,setDrag]=useState(null);
- const t=state.targets.find(x=>x.id===state.selected)||state.targets[0];
- const f=state.fighters.find(x=>x.id===state.selectedF)||state.fighters[0];
  const reset=()=>{setZoom(1);setPan({x:0,y:0})};
- const onWheel=e=>{e.preventDefault();setZoom(z=>clamp(z*(e.deltaY<0?1.12:.89),.75,3.2))};
- const onDown=e=>{if(e.button!==0)return;setDrag({sx:e.clientX,sy:e.clientY,px:pan.x,py:pan.y})};
- const onMove=e=>{if(!drag)return;setPan({x:drag.px+e.clientX-drag.sx,y:drag.py+e.clientY-drag.sy})};
- return <div className={'radarPage '+(full?'radarFull':'')}>
+ const onWheel=e=>{e.preventDefault();setZoom(z=>clamp(z*(e.deltaY<0?1.12:.89),.65,4))};
+ const down=e=>{if(e.button!==0)return;setDrag({x:e.clientX,y:e.clientY,px:pan.x,py:pan.y})};
+ const move=e=>{if(!drag)return;setPan({x:drag.px+e.clientX-drag.x,y:drag.py+e.clientY-drag.y})};
+ const up=()=>setDrag(null);
+
+ return <div className="radarPage radarReferencePage">
   <header>
    <div className="title">RAF INTERCEPT <span>v{V}</span></div>
-   <div className="clock">RADAR DISPLAY</div>
+   <div className="clock">TACTICAL RADAR DISPLAY</div>
    <div className="headstat"><small>CONTACTS</small><b>{state.targets.length+state.fighters.length}</b></div>
    <div className="headstat"><small>SCORE</small><b>{state.score.toLocaleString()}</b></div>
    <button onClick={()=>window.close()}>✕ CLOSE RADAR</button>
   </header>
-  <div className="radarBody">
-   <aside className="left">
-    <h3>RADAR TOOLS</h3>
-    <button onClick={()=>setZoom(z=>clamp(z*1.18,.75,3.2))}>＋ ZOOM IN</button>
-    <button onClick={()=>setZoom(z=>clamp(z*.84,.75,3.2))}>− ZOOM OUT</button>
-    <button onClick={reset}>◉ RESET VIEW</button>
-    <button onClick={()=>setPan({x:0,y:0})}>◎ CENTER</button>
-    <h3>MAP LAYERS</h3>
-    {Object.entries(layers).map(([k,v])=><button className="layer" key={k} onClick={()=>setLayers(l=>({...l,[k]:!l[k]}))}><i className={v?'on':''}/> {k.toUpperCase()}</button>)}
-    <div className="scale">RADAR RANGE<br/><b>{Math.round(100/zoom)} NM</b><hr/>0 ─── 50 ─── 100 ─── 150</div>
+
+  <div className="referenceRadarBody">
+   <aside className="radarTools">
+    <h3>RADAR</h3>
+    <button onClick={()=>setZoom(z=>clamp(z*1.18,.65,4))}>＋ ZOOM</button>
+    <button onClick={()=>setZoom(z=>clamp(z*.85,.65,4))}>− ZOOM</button>
+    <button onClick={reset}>↺ RESET</button>
+    <h3>OVERLAYS</h3>
+    {[
+      ['aircraft','AIRCRAFT'],
+      ['trails','GHOST TRAILS'],
+      ['headings','HEADING BUGS'],
+      ['qra','QRA BASES'],
+      ['rings','RANGE RINGS']
+    ].map(([key,label])=>
+      <button className="layer" key={key} onClick={()=>setLayers(l=>({...l,[key]:!l[key]}))}>
+       <i className={layers[key]?'on':''}/> {label}
+      </button>
+    )}
+    <div className="radarScale">VIEW<br/><b>{zoom.toFixed(1)}×</b><hr/>PAN: DRAG<br/>ZOOM: WHEEL / BUTTONS</div>
    </aside>
-   <main className="mapFrame">
-    <div className="mapViewport" onWheel={onWheel} onMouseDown={onDown} onMouseMove={onMove} onMouseUp={()=>setDrag(null)} onMouseLeave={()=>setDrag(null)}>
-     <div className="mapCanvas" style={{transform:`translate(${pan.x}px,${pan.y}px) scale(${zoom})`}}>
-      <img className="radar-v2-bg" src="/assets/radar-v2-background.png" alt="" draggable="false"/>
-      <div className="grid"/>
-      <AccurateCoast/>
-      {layers.rings&&<div className="rings"><i/><i/><i/><i/></div>}
-      {layers.waypoints&&Array.from({length:24}).map((_,i)=><span key={i} className="wp" style={{left:(8+(i*23)%84)+'%',top:(12+(i*37)%74)+'%'}}>◆</span>)}
-      {layers.airways&&<><div className="airway a1"/><div className="airway a2"/><div className="airway a3"/></>}
-      {layers.qra&&bases.map(b=><div className="qra" key={b.id} style={{left:b.x+'%',top:b.y+'%'}}>▣<small>{b.name}<br/>QRA</small></div>)}
-      {layers.aircraft&&state.targets.map(p=><Contact key={p.id} p={p} selected={p.id===state.selected} onClick={()=>{}}/>)}
-      {layers.aircraft&&state.fighters.map(p=><Contact key={p.id} p={{...p,cls:'FRIENDLY'}} friendly selected={p.id===state.selectedF} onClick={()=>{}}/>)}
-     </div>
-     <div className="zoomCtl"><button onClick={()=>setZoom(z=>clamp(z*1.2,.75,3.2))}>+</button><button onClick={()=>setZoom(z=>clamp(z*.83,.75,3.2))}>−</button><button onClick={reset}>↺</button><div>{zoom.toFixed(1)}×</div></div>
-     <div className="north">N<br/><span>↑</span></div>
-     <div className="radarLegend"><b>LEGEND</b><span>□ FRIENDLY (RAF)</span><span>□ HOSTILE / UNKNOWN</span><span>◇ WAYPOINT</span><span>○ QRA BASE</span></div>
+
+   <main className="referenceRadarViewport"
+     onWheel={onWheel}
+     onMouseDown={down}
+     onMouseMove={move}
+     onMouseUp={up}
+     onMouseLeave={up}>
+    <div className="referenceRadarCanvas"
+      style={{transform:`translate(${pan.x}px,${pan.y}px) scale(${zoom})`}}>
+
+      <img
+       className="referenceRadarImage"
+       src="/assets/radar-reference.png"
+       alt="Radar display background"
+       draggable="false"
+      />
+
+      {layers.aircraft && state.targets.map(p=>
+       <Contact key={p.id} p={p} selected={p.id===state.selected} onClick={()=>{}}/>
+      )}
+
+      {layers.aircraft && state.fighters.map(p=>
+       <Contact key={p.id} p={{...p,cls:'FRIENDLY'}} friendly selected={p.id===state.selectedF} onClick={()=>{}}/>
+      )}
+
+      {layers.trails && state.targets.map(p=>
+       <div key={'trail-'+p.id} className="liveTrail"
+        style={{left:p.x+'%',top:p.y+'%',transform:`rotate(${p.heading||0}deg)`}}/>
+      )}
+
+      {layers.headings && state.targets.map(p=>
+       <div key={'heading-'+p.id} className="headingBug"
+        style={{left:p.x+'%',top:p.y+'%',transform:`rotate(${p.heading||0}deg)`}}/>
+      )}
+
+      {layers.headings && state.fighters.map(p=>
+       <div key={'fheading-'+p.id} className="headingBug friendlyBug"
+        style={{left:p.x+'%',top:p.y+'%',transform:`rotate(${p.heading||0}deg)`}}/>
+      )}
+
+      {layers.qra && bases.map(b=>
+       <div key={b.id} className="referenceQra"
+        style={{left:b.x+'%',top:b.y+'%'}}>▣</div>
+      )}
+    </div>
+
+    <div className="referenceZoomControls">
+     <button onClick={()=>setZoom(z=>clamp(z*1.2,.65,4))}>+</button>
+     <button onClick={()=>setZoom(z=>clamp(z*.83,.65,4))}>−</button>
+     <button onClick={reset}>↺</button>
+    </div>
+
+    <div className="referenceNorth">N<br/>↑</div>
+    <div className="referenceLegend">
+     <span><b className="legendBlue">■</b> RAF</span>
+     <span><b className="legendRed">■</b> UNKNOWN / HOSTILE</span>
+     <span><b>▣</b> QRA</span>
     </div>
    </main>
   </div>
